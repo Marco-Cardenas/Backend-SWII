@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './interfaces/user.interface';
@@ -6,6 +6,7 @@ import { CreateUserDTO } from './dto/user.dto';
 import { Restaurant } from './interfaces/restaurant.interface';
 import { CreateRestaurantDTO } from './dto/restaurant.dto';
 import * as bcrypt from 'bcrypt';
+import { Response } from 'express';
 
 @Injectable()
 export class CrudService {
@@ -15,7 +16,14 @@ export class CrudService {
   ) {}
 
   //Serivicios para usuarios
-  async createUser(userDTO: CreateUserDTO): Promise<User> {
+  async createUser(userDTO: CreateUserDTO, response: Response): Promise<any> {
+    const email = userDTO.email;
+    const emailTaken = await this.userModel.findOne({ email: email });
+    if (emailTaken) {
+       return response.status(HttpStatus.UNAUTHORIZED).json({
+        message: "Email duplicado"
+      });
+    }
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(userDTO.password, salt);
     const newUser = new this.userModel({

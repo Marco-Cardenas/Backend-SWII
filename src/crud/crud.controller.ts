@@ -5,6 +5,7 @@ import { CreateRestaurantDTO } from './dto/restaurant.dto';
 import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { loginDto } from 'src/auth/login.dto';
+import { Response } from 'express';
 
 
 @Controller('...')
@@ -17,13 +18,18 @@ export class CrudController {
 
   //Direcciones de los usuarios
   @Post('createUser')
-  async createUser(@Res() resp, @Body() userDTO: CreateUserDTO) {
-    const newUser = await this.crudService.createUser(userDTO);
-    const token = await this.authService.login(newUser);
-    return resp.status(HttpStatus.OK).json({
-      message: 'Usuario Creado',
-      token: token.access_token
-    });
+  async createUser(@Res() resp:Response, @Body() userDTO: CreateUserDTO) {
+    const newUser = await this.crudService.createUser(userDTO,resp);
+
+    if (!newUser || newUser.status) {
+      return;
+  }
+      const token = await this.authService.login(newUser);
+      return resp.status(HttpStatus.OK).json({
+        message: 'Usuario Creado',
+        token: token.access_token
+      });
+    
   }
 
   @Post('login')
