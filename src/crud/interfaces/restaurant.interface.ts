@@ -10,9 +10,8 @@ export interface reviewObject {
 
 export interface Restaurant extends Document {
   name: string;
-  email: string;
-  password: string;
-  profile: string;
+  own: string;
+  fotoPerfil: string;
   description: string;
   address: {};
   viewed: number;
