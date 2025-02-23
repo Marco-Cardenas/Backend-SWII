@@ -1,4 +1,5 @@
 import { Controller, Post, Res, Body, HttpStatus, Get, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiResponse, ApiOperation, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { CrudService } from './crud.service';
 import { CreateUserDTO } from './dto/user.dto';
@@ -408,5 +409,41 @@ export class CrudController {
   async deleteRestaurantFromLiked(@Res() resp, @Param('idUser') userID: string, @Body() body: { idRestaurants: string[] }) {
     const result = await this.crudService.deleteRestaurantFromLiked(userID, body.idRestaurants);
     return resp.status(HttpStatus.OK).json(result);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getEscaneoNearUser')
+  @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle' })
+  @ApiResponse({ status: 200, description: 'Nearby restaurants retrieved successfully.', schema: {
+      example: {
+        message: 'Restaurantes cercanos',
+        escaneosNear: [],
+      },
+    },})
+  async getEscaneoNearUser( @Res() resp: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number) {
+    const escaneosNear = await this.crudService.getEscaneoNearUser(latitud, longitud, anguloCamara);
+    return resp.status(HttpStatus.OK).json({
+      message: 'Restaurantes cercanos',
+      escaneosNear,
+    });
+  }
+  
+  @UseGuards(JwtAuthGuard)
+  @Get('getEscaneoNearUserFromDistance')
+  @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle and a specific distance' })
+  @ApiResponse({
+    status: 200, description: 'Nearby restaurants retrieved successfully within the specified distance.', schema: {
+      example: {
+        message: 'Restaurantes cercanos dentro de la distancia',
+        escaneosNear: [],
+      },
+    },
+  })
+  async getEscaneoNearUserFromDistance( @Res() respuesta: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number, @Param('distanciaRequerida') distanciaRequerida: string) {
+    const escaneosNear = await this.crudService.getEscaneoNearUserFromDistance(latitud, longitud,anguloCamara,distanciaRequerida);
+    return respuesta.status(200).json({
+      message: 'Restaurantes cercanos dentro de la distancia',
+      escaneosNear,
+    });
   }
 }

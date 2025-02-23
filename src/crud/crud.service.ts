@@ -37,6 +37,74 @@ export class CrudService {
     return escaneo;
   }
 
+  async getEscaneoNearUser(latitud: number, longitud: number, anguloCamara: number) {
+    // Recopilamos los restaurantes que esten cercanos a un radio de 1.11 km para no sobrecargar de informacion, segun el Degree Precision (1.11 km = 0.01 grados)
+    const allRestaurants = await this.restaurantModel.find({
+      "address.latitud": {$lte: latitud + 0.007, $gte: latitud - 0.007},
+      "address.longitud": {$lte: longitud + 0.007, $gte: longitud - 0.007}
+    });
+
+    // Obtenemos los restaurante ubicado en ± 45 grados del angulo donde apunta la camara
+    const escaneosNear = allRestaurants.filter(restaurant => {
+      let angulo = Math.atan2(restaurant.address.longitude - longitud, restaurant.address.latitude - latitud) * 180 / Math.PI;
+      //Se ajusta el angulo para que este entre 0 y 360
+      angulo = (angulo + 360) % 360;
+      //Se calcula la diferencia entre el angulo de la camara y el angulo del escaneo
+      let diferencia = Math.abs(anguloCamara - angulo);
+      //Se ajusta la diferencia para que este entre 0 y 180
+      diferencia = (diferencia + 180) % 180;
+      //Se retorna si la diferencia es menor o igual a 45 grados
+      return diferencia <= 45;
+    })
+
+    return escaneosNear;
+  }
+
+  async getEscaneoNearUserFromDistance(latitud: number, longitud: number, anguloCamara: number, distanciaRequerida: string) {
+    // Conversion de grados a radianes
+    const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
+      
+    // Radio de la tierra en kilometros
+    const earthRadius = 6371; 
+
+    // Primer filto. Recopilamos los restaurantes que esten cercanos a 1.11 km para no sobrecargar de informacion, segun el Degree Precision (1.11 km = 0.01 grados)
+    const allRestaurants = await this.restaurantModel.find({
+      "address.latitud": {$lte: latitud + 0.007, $gte: latitud - 0.007},
+      "address.longitud": {$lte: longitud + 0.007, $gte: longitud - 0.007}
+    });
+
+    const escaneosNear = allRestaurants.filter(restaurant => {
+      // latitud y longitud en radianes
+      const lat = convertRadians(latitud);
+      const lon = convertRadians(longitud);
+      const lat1Rad = convertRadians(restaurant.address.latitude);
+      const lon1Rad = convertRadians(restaurant.address.longitude);
+      
+      // Diferencia de latitud y longitud
+      const differenceLat = lat - lat1Rad;
+      const differenceLon = lon - lon1Rad;
+
+      // Formula de Haversine
+      const a = Math.sin(differenceLat / 2) * Math.sin(differenceLat / 2) + Math.sin(differenceLon / 2) * Math.sin(differenceLon / 2) * Math.cos(lat) * Math.cos(lat);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = earthRadius * c;
+
+      let angulo = Math.atan2(restaurant.address.longitude - longitud, restaurant.address.latitude - latitud) * 180 / Math.PI;
+      //Se ajusta el angulo para que este entre 0 y 360
+      angulo = (angulo + 360) % 360;
+      //Se calcula la diferencia entre el angulo de la camara y el angulo del escaneo
+      let diferencia = Math.abs(anguloCamara - angulo);
+      //Se ajusta la diferencia para que este entre 0 y 180
+      diferencia = (diferencia + 180) % 180;
+      
+      // Retorno si la diferencia es menor o igual a 45 grados y la distancia es menor o igual a la distancia dada
+      return diferencia <= 45 && distance <= parseFloat(distanciaRequerida);
+    })
+
+    return escaneosNear;
+  }
+
   async updateEscaneo(escaneoID: string, escaneoData: any): Promise<Escaneo> {
     //el valor {new:true} se usa para retornar el escaneo despues de actualizarla
     const escaneoUpdated = await this.escaneoModel.findByIdAndUpdate(escaneoID, escaneoData, {new:true});

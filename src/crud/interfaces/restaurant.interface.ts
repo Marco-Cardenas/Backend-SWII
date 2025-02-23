@@ -13,7 +13,10 @@ export interface Restaurant extends Document {
   own: string;
   fotoPerfil: string;
   description: string;
-  address: {};
+  address: {
+    latitude: number;
+    longitude: number;
+  };
   viewed: number;
   reviews: reviewObject[];
 }
