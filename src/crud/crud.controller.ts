@@ -156,8 +156,8 @@ export class CrudController {
     },
   }})
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async updateUser(@Res() resp, @Param('id') userID: string, @Body() userDTO: CreateUserDTO) {
-    const userUpdated = await this.crudService.updateUser(userID, userDTO);
+  async updateUser(@Res() resp, @Param('id') userID: string, @Body() userData: any) {
+    const userUpdated = await this.crudService.updateUser(userID, userData);
     return resp.status(HttpStatus.OK).json({
       message: 'Usuario Actualizado',
       userUpdated: userUpdated
