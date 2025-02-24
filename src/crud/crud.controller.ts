@@ -448,9 +448,8 @@ export class CrudController {
       escaneosNear,
     });
   }
-  //!aquin empiezo
-  
-  @Post('addComent/:idRestaurant')
+
+  @Post('addComment/:idRestaurant')
   @ApiOperation({ summary: 'add comment to a restaurant' })
   @ApiResponse({
     status: 200, description: 'comment successfully added to a restaurant.', schema: {
@@ -460,11 +459,17 @@ export class CrudController {
       },
     },
   })
+  @ApiBody({schema: {
+    example: {
+       idUser: "string",
+       userName:"string",
+        comment: "string",
+       calification: "number",
+    },
+  }})
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
   async addComentario(@Param('idRestaurant') idRestaurant:string , @Body() coment:reviewObject, @Res() resp:Response){
     try{
-     // const objectId = Types.ObjectId;
-      //const id = new objectId(idRestaurant);
       const restaurantComment = await this.crudService.addComment(idRestaurant,coment)
       if(!restaurantComment){
         return resp.status(404).json({
@@ -475,7 +480,6 @@ export class CrudController {
       resp.status(201).json({
         message:"comment added sucessfully"
       })
-
     }catch(err){
       console.error(err)
     }
