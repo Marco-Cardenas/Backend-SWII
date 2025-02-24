@@ -1,4 +1,5 @@
 import { Controller, Post, Res, Body, HttpStatus, Get, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiResponse, ApiOperation, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { CrudService } from './crud.service';
 import { CreateUserDTO } from './dto/user.dto';
@@ -8,6 +9,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { loginDto } from '../auth/login.dto';
 import { CreateEscaneoDTO } from './dto/escaneo.dto';
 import { CreateUserSwaggerDTO } from './dto/create-user-swagger.dto';
+import { reviewObject } from './interfaces/restaurant.interface';
+import { Types,ObjectId } from 'mongoose';
 
 @ApiTags('api')
 @Controller('api')
@@ -409,4 +412,118 @@ export class CrudController {
     const result = await this.crudService.deleteRestaurantFromLiked(userID, body.idRestaurants);
     return resp.status(HttpStatus.OK).json(result);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('getEscaneoNearUser')
+  @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle' })
+  @ApiResponse({ status: 200, description: 'Nearby restaurants retrieved successfully.', schema: {
+      example: {
+        message: 'Restaurantes cercanos',
+        escaneosNear: [],
+      },
+    },})
+  async getEscaneoNearUser( @Res() resp: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number) {
+    const escaneosNear = await this.crudService.getEscaneoNearUser(latitud, longitud, anguloCamara);
+    return resp.status(HttpStatus.OK).json({
+      message: 'Restaurantes cercanos',
+      escaneosNear,
+    });
+  }
+  
+  @UseGuards(JwtAuthGuard)
+  @Get('getEscaneoNearUserFromDistance')
+  @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle and a specific distance' })
+  @ApiResponse({
+    status: 200, description: 'Nearby restaurants retrieved successfully within the specified distance.', schema: {
+      example: {
+        message: 'Restaurantes cercanos dentro de la distancia',
+        escaneosNear: [],
+      },
+    },
+  })
+  async getEscaneoNearUserFromDistance( @Res() respuesta: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number, @Param('distanciaRequerida') distanciaRequerida: string) {
+    const escaneosNear = await this.crudService.getEscaneoNearUserFromDistance(latitud, longitud,anguloCamara,distanciaRequerida);
+    return respuesta.status(200).json({
+      message: 'Restaurantes cercanos dentro de la distancia',
+      escaneosNear,
+    });
+  }
+
+  //!Comentarios
+  //@UseGuards(JwtAuthGuard)
+  @Post('addComment/:idRestaurant')
+  @ApiOperation({ summary: 'add comment to a restaurant' })
+  @ApiResponse({
+    status: 200, description: 'comment successfully added to a restaurant.', schema: {
+      example: {
+        message: 'comment added',
+        comment: {},
+      },
+    },
+  })
+  @ApiBody({schema: {
+    example: {
+       idUser: "string",
+       userName:"string",
+        comment: "string",
+       calification: "number",
+    },
+  }})
+  @ApiResponse({ status: 404, description: 'Restaurant not found.' })
+  async addComentario(@Param('idRestaurant') idRestaurant:string , @Body() coment:reviewObject, @Res() resp:Response){
+    try{
+      const restaurantComment = await this.crudService.addComment(idRestaurant,coment)
+      if(!restaurantComment){
+        return resp.status(404).json({
+          message:"Restaurant not found"
+        })
+      }
+
+      resp.status(201).json({
+        message:"comment added sucessfully"
+      })
+    }catch(err){
+      console.error(err)
+    }
+  }
+
+  //!Denuncias
+  //@UseGuards(JwtAuthGuard)
+  @Get('getDenuncias/:option')
+  @ApiParam({ name: 'option', type: 'string', description: 'Filter param' })
+  @ApiOperation({ summary: 'Get all denuncies' })
+  @ApiResponse({
+    status: 200, description: 'OK', schema: {
+      example: {
+        denuncies:[]
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404, description: 'Denuncies not Found', schema: {
+      example: {
+        message:"Denuncies not found"
+      },
+    },
+  })
+  async getDenuncia(@Param('option') option:string,@Res() resp:Response){
+    try{
+
+      const denuncies = await this.crudService.getAllDenuncias(option);
+
+      if(denuncies.length === 0){
+        return resp.status(404).json({
+          message:"Denuncies not found"
+        })
+      }
+
+      resp.status(200).json({
+        denuncies
+      })
+
+    }catch(err){
+      console.error(err)
+    }
+  }
+
 }

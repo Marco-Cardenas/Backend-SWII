@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { reviewObject } from "../interfaces/restaurant.interface";
 
+
 export class CreateRestaurantDTO {
   @ApiProperty({ description: 'Restaurant name' })
   name: string;
@@ -15,7 +16,10 @@ export class CreateRestaurantDTO {
   description: string;
 
   @ApiProperty({ description: 'Restaurant address' })
-  address: {};
+  address: {
+    latitude: number;
+    longitude: number;
+  };
 
   @ApiProperty({ description: 'Number of times the restaurant has been viewed' })
   viewed: number;
