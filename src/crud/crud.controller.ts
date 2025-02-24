@@ -449,6 +449,8 @@ export class CrudController {
     });
   }
 
+  //!Comentarios
+  //@UseGuards(JwtAuthGuard)
   @Post('addComment/:idRestaurant')
   @ApiOperation({ summary: 'add comment to a restaurant' })
   @ApiResponse({
@@ -484,4 +486,44 @@ export class CrudController {
       console.error(err)
     }
   }
+
+  //!Denuncias
+  //@UseGuards(JwtAuthGuard)
+  @Get('getDenuncias/:option')
+  @ApiParam({ name: 'option', type: 'string', description: 'Filter param' })
+  @ApiOperation({ summary: 'Get all denuncies' })
+  @ApiResponse({
+    status: 200, description: 'OK', schema: {
+      example: {
+        denuncies:[]
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404, description: 'Denuncies not Found', schema: {
+      example: {
+        message:"Denuncies not found"
+      },
+    },
+  })
+  async getDenuncia(@Param('option') option:string,@Res() resp:Response){
+    try{
+
+      const denuncies = await this.crudService.getAllDenuncias(option);
+
+      if(denuncies.length === 0){
+        return resp.status(404).json({
+          message:"Denuncies not found"
+        })
+      }
+
+      resp.status(200).json({
+        denuncies
+      })
+
+    }catch(err){
+      console.error(err)
+    }
+  }
+
 }

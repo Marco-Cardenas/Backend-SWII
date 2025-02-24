@@ -235,7 +235,7 @@ export class CrudService {
   }
 
   async getAllDenuncias(opciones: any): Promise<Denuncia[]> {
-    const denunciasFound = await this.denunciaModel.find(opciones);
+    const denunciasFound = await this.denunciaModel.find({opciones});
     return denunciasFound;
   }
 
