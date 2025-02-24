@@ -2,6 +2,7 @@ import { Document } from "mongoose";
 
 export interface reviewObject {
   idUser: string;
+  userName:string;
   comment: string;
   calification: number;
   responses: reviewObject[];

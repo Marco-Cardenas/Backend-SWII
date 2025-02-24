@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { User } from './interfaces/user.interface';
 import { CreateUserDTO } from './dto/user.dto';
-import { Restaurant } from './interfaces/restaurant.interface';
+import { Restaurant, reviewObject } from './interfaces/restaurant.interface';
 import { CreateRestaurantDTO } from './dto/restaurant.dto';
 import * as bcrypt from 'bcrypt';
 import { Escaneo } from './interfaces/escaneo.interface';
@@ -216,6 +216,15 @@ export class CrudService {
     //el valor {new:false} se usa para retornar la tienda antes de ser borrada
     const restaurantDeleted = await this.restaurantModel.findByIdAndDelete(restaurantID, {new:false});
     return restaurantDeleted;
+  }
+
+  async addComment(idRestaurant:string,comment:reviewObject):Promise<any>{
+      const restaurant = await this.restaurantModel.findById(idRestaurant)
+      if(!restaurant){
+        return null
+      }
+    restaurant.reviews.push(comment);
+    return await restaurant.save();
   }
 
   

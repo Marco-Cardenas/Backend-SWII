@@ -9,6 +9,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { loginDto } from '../auth/login.dto';
 import { CreateEscaneoDTO } from './dto/escaneo.dto';
 import { CreateUserSwaggerDTO } from './dto/create-user-swagger.dto';
+import { reviewObject } from './interfaces/restaurant.interface';
+import { Types,ObjectId } from 'mongoose';
 
 @ApiTags('api')
 @Controller('api')
@@ -445,5 +447,37 @@ export class CrudController {
       message: 'Restaurantes cercanos dentro de la distancia',
       escaneosNear,
     });
+  }
+  //!aquin empiezo
+  
+  @Post('addComent/:idRestaurant')
+  @ApiOperation({ summary: 'add comment to a restaurant' })
+  @ApiResponse({
+    status: 200, description: 'comment successfully added to a restaurant.', schema: {
+      example: {
+        message: 'comment added',
+        comment: {},
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Restaurant not found.' })
+  async addComentario(@Param('idRestaurant') idRestaurant:string , @Body() coment:reviewObject, @Res() resp:Response){
+    try{
+     // const objectId = Types.ObjectId;
+      //const id = new objectId(idRestaurant);
+      const restaurantComment = await this.crudService.addComment(idRestaurant,coment)
+      if(!restaurantComment){
+        return resp.status(404).json({
+          message:"Restaurant not found"
+        })
+      }
+
+      resp.status(201).json({
+        message:"comment added sucessfully"
+      })
+
+    }catch(err){
+      console.error(err)
+    }
   }
 }
