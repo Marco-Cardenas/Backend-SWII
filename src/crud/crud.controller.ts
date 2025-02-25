@@ -36,6 +36,7 @@ export class CrudController {
     },
   })
   @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Email duplicado' })
   async createUser(@Res() resp, @Body() userDTO: CreateUserDTO) {
     const newUser = await this.crudService.createUser(userDTO);
     if (!newUser) {
