@@ -2,6 +2,7 @@ import { Document } from "mongoose";
 
 export interface reviewObject {
   idUser: string;
+  userName:string;
   comment: string;
   calification: number;
   responses: reviewObject[];
@@ -13,10 +14,9 @@ export interface Restaurant extends Document {
   own: string;
   fotoPerfil: string;
   description: string;
-  address: {
-    latitude: number;
-    longitude: number;
-  };
+  latitude: number;
+  longitude: number;
+  address: string;
   viewed: number;
   reviews: reviewObject[];
 }

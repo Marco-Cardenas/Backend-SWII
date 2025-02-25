@@ -9,6 +9,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { loginDto } from '../auth/login.dto';
 import { CreateEscaneoDTO } from './dto/escaneo.dto';
 import { CreateUserSwaggerDTO } from './dto/create-user-swagger.dto';
+import { reviewObject } from './interfaces/restaurant.interface';
+import { Types,ObjectId } from 'mongoose';
 
 @ApiTags('api')
 @Controller('api')
@@ -108,6 +110,70 @@ export class CrudController {
     });
   }
 
+
+  @UseGuards(JwtAuthGuard)
+  @Post('addFavoriteRestaurant')
+  @ApiOperation({ summary: 'Add a restaurant to user favorites' })
+  @ApiBody({ 
+    schema: {
+      example: {
+        restaurantId: "string"
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Restaurant added to favorites successfully.', 
+    schema: {
+      example: {
+        message: 'Restaurante añadido a favoritos',
+        userUpdated: {
+          _id: "user_id",
+          favorites: ["restaurant_id_1", "restaurant_id_2"]
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 404, description: 'Restaurant or User not found.' })
+  @ApiResponse({ status: 400, description: 'Restaurant already in favorites.' })
+  async addFavoriteRestaurant(
+    @Res() resp: Response,
+    @Request() req,
+    @Body() body: { restaurantId: string }
+  ) {
+    try {
+      const userId = req.user.userId; // Obtenemos el ID del usuario desde el token
+      const { restaurantId } = body;
+
+      // Verificamos si el restaurante existe
+      const restaurant = await this.crudService.getRestaurant(restaurantId);
+      if (!restaurant) {
+        return resp.status(HttpStatus.NOT_FOUND).json({
+          message: 'Restaurante no encontrado'
+        });
+      }
+
+      // Añadimos el restaurante a los favoritos del usuario
+      const userUpdated = await this.crudService.addRestaurantToFavorites(userId, restaurantId);
+      
+      if (!userUpdated) {
+        return resp.status(HttpStatus.NOT_FOUND).json({
+          message: 'Usuario no encontrado'
+        });
+      }
+
+      return resp.status(HttpStatus.OK).json({
+        message: 'Restaurante añadido a favoritos',
+        userUpdated
+      });
+    } catch (error) {
+      return resp.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Error al añadir restaurante a favoritos',
+        error: error.message
+      });
+    }
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('getUser/:idUser')
   @ApiOperation({ summary: 'Get user by ID' })
@@ -157,8 +223,8 @@ export class CrudController {
     },
   }})
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async updateUser(@Res() resp, @Param('id') userID: string, @Body() userDTO: CreateUserDTO) {
-    const userUpdated = await this.crudService.updateUser(userID, userDTO);
+  async updateUser(@Res() resp, @Param('id') userID: string, @Body() userData: any) {
+    const userUpdated = await this.crudService.updateUser(userID, userData);
     return resp.status(HttpStatus.OK).json({
       message: 'Usuario Actualizado',
       userUpdated: userUpdated
@@ -250,8 +316,12 @@ export class CrudController {
     },
   }})
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
-  async getRestaurant(@Res() respuesta, @Param('id') restaurantID: string) {
+  async getRestaurant(@Res() respuesta, @Param('id') restaurantID: string, @Request() req) {
     const restaurantFound = await this.crudService.getRestaurant(restaurantID);
+
+    //Se agrega el restaurante al historial del usuario
+    await this.crudService.updateUserHistorial(req.user.userId, restaurantID);
+
     return respuesta.status(HttpStatus.OK).json({
       message: 'Restaurante Encontrado',
       restaurantFound
@@ -429,4 +499,83 @@ export class CrudController {
       escaneosNear,
     });
   }
+
+  //!Comentarios
+  @UseGuards(JwtAuthGuard)
+  @Post('addComment/:idRestaurant')
+  @ApiOperation({ summary: 'add comment to a restaurant' })
+  @ApiResponse({
+    status: 200, description: 'comment successfully added to a restaurant.', schema: {
+      example: {
+        message: 'comment added',
+        comment: {},
+      },
+    },
+  })
+  @ApiBody({schema: {
+    example: {
+        comment: "string",
+       calification: "number",
+    },
+  }})
+  @ApiResponse({ status: 404, description: 'Restaurant not found.' })
+  async addComentario(@Param('idRestaurant') idRestaurant:string ,
+   @Body() coment:reviewObject,
+    @Res() resp:Response,@Request() req){
+    try{
+      const idUser = req.user.userId;
+      const restaurantComment = await this.crudService.addComment(idRestaurant,coment,idUser)
+      if(!restaurantComment){
+        return resp.status(404).json({
+          message:"Restaurant not found"
+        })
+      }
+
+      resp.status(201).json({
+        message:"comment added sucessfully"
+      })
+    }catch(err){
+      console.error(err)
+    }
+  }
+
+  //!Denuncias
+  //@UseGuards(JwtAuthGuard)
+  @Get('getDenuncias/:option')
+  @ApiParam({ name: 'option', type: 'string', description: 'Filter param' })
+  @ApiOperation({ summary: 'Get all denuncies' })
+  @ApiResponse({
+    status: 200, description: 'OK', schema: {
+      example: {
+        denuncies:[]
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404, description: 'Denuncies not Found', schema: {
+      example: {
+        message:"Denuncies not found"
+      },
+    },
+  })
+  async getDenuncia(@Param('option') option:string,@Res() resp:Response){
+    try{
+
+      const denuncies = await this.crudService.getAllDenuncias(option);
+
+      if(denuncies.length === 0){
+        return resp.status(404).json({
+          message:"Denuncies not found"
+        })
+      }
+
+      resp.status(200).json({
+        denuncies
+      })
+
+    }catch(err){
+      console.error(err)
+    }
+  }
+
 }

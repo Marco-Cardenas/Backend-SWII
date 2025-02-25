@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { User } from './interfaces/user.interface';
 import { CreateUserDTO } from './dto/user.dto';
-import { Restaurant } from './interfaces/restaurant.interface';
+import { Restaurant, reviewObject } from './interfaces/restaurant.interface';
 import { CreateRestaurantDTO } from './dto/restaurant.dto';
 import * as bcrypt from 'bcrypt';
 import { Escaneo } from './interfaces/escaneo.interface';
@@ -37,6 +37,7 @@ export class CrudService {
     return escaneo;
   }
 
+
   async getEscaneoNearUserFromDistance(latitud: number, longitud: number, anguloCamara: number, distanciaRequerida: string) {
     // Conversion de grados a radianes
     const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
@@ -64,8 +65,8 @@ export class CrudService {
       // latitud y longitud en radianes
       const lat = convertRadians(latitud);
       const lon = convertRadians(longitud);
-      const lat1Rad = convertRadians(restaurant.address.latitude);
-      const lon1Rad = convertRadians(restaurant.address.longitude);
+      const lat1Rad = convertRadians(restaurant.latitude);
+      const lon1Rad = convertRadians(restaurant.longitude);
       
       // Diferencia de latitud y longitud
       const differenceLat = lat - lat1Rad;
@@ -78,7 +79,7 @@ export class CrudService {
       const distance = earthRadius * c;
 
       /*
-      let angulo = Math.atan2(restaurant.address.longitude - longitud, restaurant.address.latitude - latitud) * 180 / Math.PI;
+      let angulo = Math.atan2(restaurant.longitude - longitud, restaurant.latitude - latitud) * 180 / Math.PI;
       //Se ajusta el angulo para que este entre 0 y 360
       angulo = (angulo + 360) % 360;
       //Se calcula la diferencia entre el angulo de la camara y el angulo del escaneo
@@ -133,6 +134,11 @@ export class CrudService {
     const user = await this.userModel.findOne({ email });
     return user;
   }
+  async updateUserHistorial(userID: string, viewedRestaurant: string):Promise<User> {
+    //el valor {new:true} se usa para retornar el usuario despues de actualizarlo
+    const historialActualizado = await this.userModel.findByIdAndUpdate(userID, { $push:{ historial:viewedRestaurant } }, {new:true});
+    return historialActualizado;
+  }
 
   async updateUser(userID: string, userData: any): Promise<User> {
     //el valor {new:true} se usa para retornar el usuario despues de actualizarlo
@@ -145,7 +151,31 @@ export class CrudService {
     const userDeleted = await this.userModel.findByIdAndDelete(userID, {new:false});
     return userDeleted;
   }
+  async addRestaurantToFavorites(userId: string, restaurantId: string): Promise<User> {
+    try {
+      // Buscamos el usuario
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        return null;
+      }
 
+      // Verificamos si el restaurante ya está en favoritos
+      if (user.favorites.includes(restaurantId)) {
+        throw new Error('El restaurante ya está en la lista de favoritos');
+      }
+
+      // Añadimos el restaurantId al array de favorites
+      const userUpdated = await this.userModel.findByIdAndUpdate(
+        userId,
+        { $push: { favorites: restaurantId } },
+        { new: true }
+      );
+
+      return userUpdated;
+    } catch (error) {
+      throw error;
+    }
+  }
   async getRestaurantsLiked(userID: string): Promise<Restaurant[]> {
     const user = await this.userModel.findById(userID);
     if (!user || !user.favorites.length) {
@@ -208,6 +238,19 @@ export class CrudService {
     return restaurantDeleted;
   }
 
+  async addComment(idRestaurant:string,comment:reviewObject,idUser:string):Promise<any>{
+
+      const restaurant = await this.restaurantModel.findById(idRestaurant)
+      if(!restaurant){
+        return null
+      }
+    const user = await this.userModel.findById(idUser);
+    comment.idUser = user.id;
+    comment.userName = user.name;
+    restaurant.reviews.push(comment);
+    return await restaurant.save();
+  }
+
   
   //Servicios de Denuncias
   async createDenuncia(denunciaDTO: CreateDenunciaDTO): Promise<Denuncia> {
@@ -216,7 +259,7 @@ export class CrudService {
   }
 
   async getAllDenuncias(opciones: any): Promise<Denuncia[]> {
-    const denunciasFound = await this.denunciaModel.find(opciones);
+    const denunciasFound = await this.denunciaModel.find({opciones});
     return denunciasFound;
   }
 
