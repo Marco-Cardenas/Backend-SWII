@@ -160,7 +160,31 @@ export class CrudService {
     const userDeleted = await this.userModel.findByIdAndDelete(userID, {new:false});
     return userDeleted;
   }
+  async addRestaurantToFavorites(userId: string, restaurantId: string): Promise<User> {
+    try {
+      // Buscamos el usuario
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        return null;
+      }
 
+      // Verificamos si el restaurante ya está en favoritos
+      if (user.favorites.includes(restaurantId)) {
+        throw new Error('El restaurante ya está en la lista de favoritos');
+      }
+
+      // Añadimos el restaurantId al array de favorites
+      const userUpdated = await this.userModel.findByIdAndUpdate(
+        userId,
+        { $push: { favorites: restaurantId } },
+        { new: true }
+      );
+
+      return userUpdated;
+    } catch (error) {
+      throw error;
+    }
+  }
   async getRestaurantsLiked(userID: string): Promise<Restaurant[]> {
     const user = await this.userModel.findById(userID);
     if (!user || !user.favorites.length) {

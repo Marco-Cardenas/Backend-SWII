@@ -110,6 +110,70 @@ export class CrudController {
     });
   }
 
+
+  @UseGuards(JwtAuthGuard)
+  @Post('addFavoriteRestaurant')
+  @ApiOperation({ summary: 'Add a restaurant to user favorites' })
+  @ApiBody({ 
+    schema: {
+      example: {
+        restaurantId: "string"
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Restaurant added to favorites successfully.', 
+    schema: {
+      example: {
+        message: 'Restaurante añadido a favoritos',
+        userUpdated: {
+          _id: "user_id",
+          favorites: ["restaurant_id_1", "restaurant_id_2"]
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 404, description: 'Restaurant or User not found.' })
+  @ApiResponse({ status: 400, description: 'Restaurant already in favorites.' })
+  async addFavoriteRestaurant(
+    @Res() resp: Response,
+    @Request() req,
+    @Body() body: { restaurantId: string }
+  ) {
+    try {
+      const userId = req.user.userId; // Obtenemos el ID del usuario desde el token
+      const { restaurantId } = body;
+
+      // Verificamos si el restaurante existe
+      const restaurant = await this.crudService.getRestaurant(restaurantId);
+      if (!restaurant) {
+        return resp.status(HttpStatus.NOT_FOUND).json({
+          message: 'Restaurante no encontrado'
+        });
+      }
+
+      // Añadimos el restaurante a los favoritos del usuario
+      const userUpdated = await this.crudService.addRestaurantToFavorites(userId, restaurantId);
+      
+      if (!userUpdated) {
+        return resp.status(HttpStatus.NOT_FOUND).json({
+          message: 'Usuario no encontrado'
+        });
+      }
+
+      return resp.status(HttpStatus.OK).json({
+        message: 'Restaurante añadido a favoritos',
+        userUpdated
+      });
+    } catch (error) {
+      return resp.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Error al añadir restaurante a favoritos',
+        error: error.message
+      });
+    }
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('getUser/:idUser')
   @ApiOperation({ summary: 'Get user by ID' })
