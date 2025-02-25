@@ -16,10 +16,13 @@ export class CreateRestaurantDTO {
   description: string;
 
   @ApiProperty({ description: 'Restaurant address' })
-  address: {
-    latitude: number;
-    longitude: number;
-  };
+  address: string;
+  
+  @ApiProperty({ description: 'Restaurant latitude' })
+  latitude: number;
+
+  @ApiProperty({ description: 'Restaurant longitude' })
+  longitude: number;
 
   @ApiProperty({ description: 'Number of times the restaurant has been viewed' })
   viewed: number;
