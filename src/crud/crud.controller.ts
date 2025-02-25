@@ -412,24 +412,7 @@ export class CrudController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('getEscaneoNearUser')
-  @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle' })
-  @ApiResponse({ status: 200, description: 'Nearby restaurants retrieved successfully.', schema: {
-      example: {
-        message: 'Restaurantes cercanos',
-        escaneosNear: [],
-      },
-    },})
-  async getEscaneoNearUser( @Res() resp: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number) {
-    const escaneosNear = await this.crudService.getEscaneoNearUser(latitud, longitud, anguloCamara);
-    return resp.status(HttpStatus.OK).json({
-      message: 'Restaurantes cercanos',
-      escaneosNear,
-    });
-  }
-  
-  @UseGuards(JwtAuthGuard)
-  @Get('getEscaneoNearUserFromDistance')
+  @Get('getEscaneoNearUserFromDistance/:latitud/:longitud/:anguloCamara/:distanciaRequerida')
   @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle and a specific distance' })
   @ApiResponse({
     status: 200, description: 'Nearby restaurants retrieved successfully within the specified distance.', schema: {
