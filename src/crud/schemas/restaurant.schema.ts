@@ -7,8 +7,8 @@ export const RestaurantSchema = new Schema({
   fotoPerfil: {type:String, default: ''},
   description: {type:String, default: ''},
   address: {type:String, default: ''},
-  latitude:{type:Number, default: ''},
-  longitude:{type:Number, default: ''},
+  latitude:{type:Number, default: 0},
+  longitude:{type:Number, default: 0},
   viewed: {type:Number, default: 0},
   reviews: {type:Array<reviewObject>, default: []}
 });
