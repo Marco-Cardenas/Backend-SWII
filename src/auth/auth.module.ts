@@ -13,7 +13,7 @@ import { CrudModule } from '../crud/crud.module';
     JwtModule.register({
       global:true,
       secret: 'secretKey', // cambiar
-      signOptions: { expiresIn: '60m' },
+      signOptions: { /*expiresIn: '60m' */},
     }),
   ],
   providers: [AuthService, JwtStrategy],
