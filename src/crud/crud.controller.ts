@@ -252,8 +252,12 @@ export class CrudController {
     },
   }})
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
-  async getRestaurant(@Res() respuesta, @Param('id') restaurantID: string) {
+  async getRestaurant(@Res() respuesta, @Param('id') restaurantID: string, @Request() req) {
     const restaurantFound = await this.crudService.getRestaurant(restaurantID);
+
+    //Se agrega el restaurante al historial del usuario
+    await this.crudService.updateUserHistorial(req.user.userId, restaurantID);
+
     return respuesta.status(HttpStatus.OK).json({
       message: 'Restaurante Encontrado',
       restaurantFound

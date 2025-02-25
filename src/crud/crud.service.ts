@@ -143,6 +143,11 @@ export class CrudService {
     const user = await this.userModel.findOne({ email });
     return user;
   }
+  async updateUserHistorial(userID: string, viewedRestaurant: string):Promise<User> {
+    //el valor {new:true} se usa para retornar el usuario despues de actualizarlo
+    const historialActualizado = await this.userModel.findByIdAndUpdate(userID, { $push:{ historial:viewedRestaurant } }, {new:true});
+    return historialActualizado;
+  }
 
   async updateUser(userID: string, userData: any): Promise<User> {
     //el valor {new:true} se usa para retornar el usuario despues de actualizarlo
