@@ -247,11 +247,15 @@ export class CrudService {
     return restaurantDeleted;
   }
 
-  async addComment(idRestaurant:string,comment:reviewObject):Promise<any>{
+  async addComment(idRestaurant:string,comment:reviewObject,idUser:string):Promise<any>{
+
       const restaurant = await this.restaurantModel.findById(idRestaurant)
       if(!restaurant){
         return null
       }
+    const user = await this.userModel.findById(idUser);
+    comment.idUser = user.id;
+    comment.userName = user.name;
     restaurant.reviews.push(comment);
     return await restaurant.save();
   }

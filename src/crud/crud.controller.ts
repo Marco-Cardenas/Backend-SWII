@@ -518,7 +518,7 @@ export class CrudController {
   }
 
   //!Comentarios
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('addComment/:idRestaurant')
   @ApiOperation({ summary: 'add comment to a restaurant' })
   @ApiResponse({
@@ -531,16 +531,17 @@ export class CrudController {
   })
   @ApiBody({schema: {
     example: {
-       idUser: "string",
-       userName:"string",
         comment: "string",
        calification: "number",
     },
   }})
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
-  async addComentario(@Param('idRestaurant') idRestaurant:string , @Body() coment:reviewObject, @Res() resp:Response){
+  async addComentario(@Param('idRestaurant') idRestaurant:string ,
+   @Body() coment:reviewObject,
+    @Res() resp:Response,@Request() req){
     try{
-      const restaurantComment = await this.crudService.addComment(idRestaurant,coment)
+      const idUser = req.user.userId;
+      const restaurantComment = await this.crudService.addComment(idRestaurant,coment,idUser)
       if(!restaurantComment){
         return resp.status(404).json({
           message:"Restaurant not found"
