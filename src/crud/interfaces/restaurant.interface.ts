@@ -14,10 +14,9 @@ export interface Restaurant extends Document {
   own: string;
   fotoPerfil: string;
   description: string;
-  address: {
-    latitude: number;
-    longitude: number;
-  };
+  latitude: number;
+  longitude: number;
+  address: string;
   viewed: number;
   reviews: reviewObject[];
 }

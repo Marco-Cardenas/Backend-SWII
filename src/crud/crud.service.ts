@@ -46,7 +46,7 @@ export class CrudService {
 
     // Obtenemos los restaurante ubicado en ± 45 grados del angulo donde apunta la camara
     const escaneosNear = allRestaurants.filter(restaurant => {
-      let angulo = Math.atan2(restaurant.address.longitude - longitud, restaurant.address.latitude - latitud) * 180 / Math.PI;
+      let angulo = Math.atan2(restaurant.longitude - longitud, restaurant.latitude - latitud) * 180 / Math.PI;
       //Se ajusta el angulo para que este entre 0 y 360
       angulo = (angulo + 360) % 360;
       //Se calcula la diferencia entre el angulo de la camara y el angulo del escaneo
@@ -77,8 +77,8 @@ export class CrudService {
       // latitud y longitud en radianes
       const lat = convertRadians(latitud);
       const lon = convertRadians(longitud);
-      const lat1Rad = convertRadians(restaurant.address.latitude);
-      const lon1Rad = convertRadians(restaurant.address.longitude);
+      const lat1Rad = convertRadians(restaurant.latitude);
+      const lon1Rad = convertRadians(restaurant.longitude);
       
       // Diferencia de latitud y longitud
       const differenceLat = lat - lat1Rad;
@@ -90,7 +90,7 @@ export class CrudService {
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distance = earthRadius * c;
 
-      let angulo = Math.atan2(restaurant.address.longitude - longitud, restaurant.address.latitude - latitud) * 180 / Math.PI;
+      let angulo = Math.atan2(restaurant.longitude - longitud, restaurant.latitude - latitud) * 180 / Math.PI;
       //Se ajusta el angulo para que este entre 0 y 360
       angulo = (angulo + 360) % 360;
       //Se calcula la diferencia entre el angulo de la camara y el angulo del escaneo
