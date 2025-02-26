@@ -39,53 +39,56 @@ export class CrudService {
 
 
   async getEscaneoNearUserFromDistance(latitud: number, longitud: number, anguloCamara: number, distanciaRequerida: number) {
-    // Conversion de grados a radianes
+    // Conversión de grados a radianes
     const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
       
-    // Radio de la tierra en kilometros
+    // Radio de la tierra en kilómetros
     const earthRadius = 6371; 
 
-    // Obtenemos la distancia requerida en metros
-    const distanceMeter = (distanciaRequerida / 1000);
+    // Convertimos la distancia requerida de metros a kilómetros
+    const distanceMeter = distanciaRequerida / 1000;
 
     // Recopilamos todos los restaurantes
     const allRestaurants = await this.restaurantModel.find({});
 
-    // Seleccionamos los restaurantes que esten a una distancia menor o igual a la distancia requerida
-    const escaneosNear = allRestaurants.filter(restaurant => {
-      // latitud y longitud en radianes
-      const lat = convertRadians(latitud);
-      const lon = convertRadians(longitud);
-      const lat1Rad = convertRadians(restaurant.latitude);
-      const lon1Rad = convertRadians(restaurant.longitude);
-      
-      // Diferencia de latitud y longitud
-      const differenceLat = lat - lat1Rad;
-      const differenceLon = lon - lon1Rad;
+    // Seleccionamos los restaurantes que estén a una distancia menor o igual a la distancia requerida
+    const escaneosNear = allRestaurants.map(restaurant => {
+          // Latitud y longitud en radianes
+          const lat = convertRadians(latitud);
+          const lon = convertRadians(longitud);
+          const lat1Rad = convertRadians(restaurant.latitude);
+          const lon1Rad = convertRadians(restaurant.longitude);
+                
+          // Diferencia de latitud y longitud
+          const differenceLat = lat - lat1Rad;
+          const differenceLon = lon - lon1Rad;
 
-      // Formula de Haversine
-      const a = Math.sin(differenceLat / 2) * Math.sin(differenceLat / 2) + Math.sin(differenceLon / 2) * Math.sin(differenceLon / 2) * Math.cos(lat) * Math.cos(lat);
+          // Fórmula de Haversine
+          const a = Math.sin(differenceLat / 2) * Math.sin(differenceLat / 2) + 
+                    Math.sin(differenceLon / 2) * Math.sin(differenceLon / 2) * 
+                    Math.cos(lat) * Math.cos(lat1Rad);
 
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = earthRadius * c;
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const distance = earthRadius * c;
+          /*
+            let angulo = Math.atan2(restaurant.longitude - longitud, restaurant.latitude - latitud) * 180 / Math.PI;
+            //Se ajusta el angulo para que este entre 0 y 360
+            angulo = (angulo + 360) % 360;
+            //Se calcula la diferencia entre el angulo de la camara y el angulo del escaneo
+            let diferencia = Math.abs(anguloCamara - angulo);
+            //Se ajusta la diferencia para que este entre 0 y 180
+            diferencia = (diferencia + 180) % 180;
+                
+            // Retorno si la diferencia es menor o igual a 45 grados y la distancia es menor o igual a la distancia dada
+            return diferencia <= 45 && distance <= parseFloat(distanciaRequerida);
+          */
+          // Retornamos el objeto del restaurante con la distancia calculada
+          return { ...restaurant.toObject(), distance };
+        })
+        .filter(restaurant => restaurant.distance <= distanceMeter); // Filtramos por la distancia requerida
 
-      /*
-      let angulo = Math.atan2(restaurant.longitude - longitud, restaurant.latitude - latitud) * 180 / Math.PI;
-      //Se ajusta el angulo para que este entre 0 y 360
-      angulo = (angulo + 360) % 360;
-      //Se calcula la diferencia entre el angulo de la camara y el angulo del escaneo
-      let diferencia = Math.abs(anguloCamara - angulo);
-      //Se ajusta la diferencia para que este entre 0 y 180
-      diferencia = (diferencia + 180) % 180;
-      
-      // Retorno si la diferencia es menor o igual a 45 grados y la distancia es menor o igual a la distancia dada
-      return diferencia <= 45 && distance <= parseFloat(distanciaRequerida);
-      */
-     // Retorna si la distancia es menor o igual que la distancia dad
-     return distance <= distanceMeter;
-    })
     return escaneosNear;
-  }
+}
 
   async updateEscaneo(escaneoID: string, escaneoData: any): Promise<Escaneo> {
     //el valor {new:true} se usa para retornar el escaneo despues de actualizarla
