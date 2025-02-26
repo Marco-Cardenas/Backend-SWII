@@ -38,29 +38,20 @@ export class CrudService {
   }
 
 
-  async getEscaneoNearUserFromDistance(latitud: number, longitud: number, anguloCamara: number, distanciaRequerida: string) {
+  async getEscaneoNearUserFromDistance(latitud: number, longitud: number, anguloCamara: number, distanciaRequerida: number) {
     // Conversion de grados a radianes
     const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
       
     // Radio de la tierra en kilometros
     const earthRadius = 6371; 
 
-    // Calculo de latitud y longitud minima y maxima
-    const latMin = Number(latitud) - 0.01;
-    const latMax = Number(latitud) + 0.01;
-    const lonMin = Number(longitud) - 0.01;
-    const lonMax = Number(longitud) + 0.01;
-
     // Obtenemos la distancia requerida en metros
-    const distanceMeter = (parseFloat(distanciaRequerida) / 1000);
+    const distanceMeter = (distanciaRequerida / 1000);
 
-    // Primer filto. Recopilamos los restaurantes que esten cercanos a 1.11 km para no sobrecargar de informacion, segun el Degree Precision (1.11 km = 0.01 grados).
-    const allRestaurants = await this.restaurantModel.find({
-      latitude: { $gte: latMin, $lte: latMax },
-      longitude: { $gte: lonMin, $lte: lonMax }
-    });
+    // Recopilamos todos los restaurantes
+    const allRestaurants = await this.restaurantModel.find({});
 
-    // Segundo filtro. Seleccionamos los restaurantes que esten a una distancia menor o igual a la distancia requerida
+    // Seleccionamos los restaurantes que esten a una distancia menor o igual a la distancia requerida
     const escaneosNear = allRestaurants.filter(restaurant => {
       // latitud y longitud en radianes
       const lat = convertRadians(latitud);

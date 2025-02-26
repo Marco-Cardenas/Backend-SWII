@@ -498,7 +498,7 @@ export class CrudController {
       },
     },
   })
-  async getEscaneoNearUserFromDistance( @Res() respuesta: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number, @Param('distanciaRequerida') distanciaRequerida: string) {
+  async getEscaneoNearUserFromDistance( @Res() respuesta: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number, @Param('distanciaRequerida') distanciaRequerida: number) {
     const escaneosNear = await this.crudService.getEscaneoNearUserFromDistance(latitud, longitud,anguloCamara,distanciaRequerida);
     return respuesta.status(200).json({
       message: 'Restaurantes cercanos dentro de la distancia',
