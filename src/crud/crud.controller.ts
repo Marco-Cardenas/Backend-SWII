@@ -549,7 +549,9 @@ export class CrudController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update Restaurants comment' })
   @ApiResponse({ status: 200, description: 'comentario actualizado' })
-  @ApiResponse({ status: 404, description: 'No se encontro el restaurant o el comentario' })
+  @ApiResponse({ status: 400, description: 'User is not authorized to update this comment' })
+  @ApiResponse({ status: 404, description: 'Comments doesnt exist' })
+  @ApiResponse({ status: 404, description: 'Restaurant doesnt exist' })
   @ApiBody({ type:  updateCommentDto})
   @Post('updateComment/:idRestaurant/:index')
   async updateComment(@Param('idRestaurant') idRes:string,

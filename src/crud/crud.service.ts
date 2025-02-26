@@ -260,15 +260,15 @@ export class CrudService {
       const restaurant = await this.restaurantModel.findById(idRestaurant);
       if (!restaurant) {
       resp.status(400).json({
-          message:"No existe el restaurant"
+          message:"Restaurant doesnt exist"
         });
         return null
       }
   
       const comentarioIndex = restaurant.reviews[index];
       if (!comentarioIndex) {
-         resp.status(400).json({
-          message:"No existe el comentario"
+         resp.status(404).json({
+          message:"Comment doesnt exist"
         });
         return null
       }
