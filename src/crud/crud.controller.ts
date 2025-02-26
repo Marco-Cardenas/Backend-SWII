@@ -1,5 +1,5 @@
 import { Controller, Post, Res, Body, HttpStatus, Get, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
-import { Response } from 'express';
+import { response, Response } from 'express';
 import { ApiTags, ApiResponse, ApiOperation, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { CrudService } from './crud.service';
 import { CreateUserDTO } from './dto/user.dto';
@@ -11,6 +11,7 @@ import { CreateEscaneoDTO } from './dto/escaneo.dto';
 import { CreateUserSwaggerDTO } from './dto/create-user-swagger.dto';
 import { reviewObject } from './interfaces/restaurant.interface';
 import { Types,ObjectId } from 'mongoose';
+import { updateCommentDto } from './dto/update-comment.dto';
 
 @ApiTags('api')
 @Controller('api')
@@ -540,6 +541,30 @@ export class CrudController {
       resp.status(201).json({
         message:"comment added sucessfully"
       })
+    }catch(err){
+      console.error(err)
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update Restaurants comment' })
+  @ApiResponse({ status: 200, description: 'comentario actualizado' })
+  @ApiResponse({ status: 404, description: 'No se encontro el restaurant o el comentario' })
+  @ApiBody({ type:  updateCommentDto})
+  @Post('updateComment/:idRestaurant/:index')
+  async updateComment(@Param('idRestaurant') idRes:string,
+                      @Param('index')index:number,
+                      @Body() updateData:any,
+                      @Res() resp,
+                      @Request() req){
+    try{
+      const idUser = req.user.userId;
+      const updatedComment = await this.crudService.updateComment(idRes,index,updateData,idUser,resp)
+      if(updatedComment){
+        return resp.status(200).json({
+        message:"comentario actualizado"
+      })
+    }
     }catch(err){
       console.error(err)
     }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId, Types } from 'mongoose';
 import { User } from './interfaces/user.interface';
@@ -10,6 +10,8 @@ import { Escaneo } from './interfaces/escaneo.interface';
 import { Denuncia } from './interfaces/denuncia.interface';
 import { CreateEscaneoDTO } from './dto/escaneo.dto';
 import { CreateDenunciaDTO } from './dto/denuncia.dto';
+import { updateCommentDto } from './dto/update-comment.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class CrudService {
@@ -250,7 +252,57 @@ export class CrudService {
     return await restaurant.save();
   }
 
+  async updateComment(idRestaurant: string, index: number, data: any, userId: string,resp:Response):Promise<any> {
+    try {
+      const { comment, calificacion } = data;
   
+      
+      const restaurant = await this.restaurantModel.findById(idRestaurant);
+      if (!restaurant) {
+      resp.status(400).json({
+          message:"No existe el restaurant"
+        });
+        return null
+      }
+  
+      const comentarioIndex = restaurant.reviews[index];
+      if (!comentarioIndex) {
+         resp.status(400).json({
+          message:"No existe el comentario"
+        });
+        return null
+      }
+  
+      if (comentarioIndex.idUser !== userId) {
+         resp.status(400).json({
+          message:"User is not authorized to update this comment"
+        });
+        return null
+      }
+  
+      if (comment !== undefined) {
+        comentarioIndex.comment = comment;
+      }
+  
+      if (calificacion !== undefined) {
+        comentarioIndex.calification = calificacion;
+      }
+  
+      //console.log(comentarioIndex);
+  
+      restaurant.markModified(`reviews.${index}`);
+  
+      await restaurant.save();
+  
+      //console.log(restaurant);
+    return restaurant
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+  
+
   //Servicios de Denuncias
   async createDenuncia(denunciaDTO: CreateDenunciaDTO): Promise<Denuncia> {
     const newDenuncia = await this.denunciaModel.create(denunciaDTO);
