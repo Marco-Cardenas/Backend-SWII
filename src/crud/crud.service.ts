@@ -111,6 +111,11 @@ export class CrudService {
 
   //Serivicios para usuarios
   async createUser(userDTO: CreateUserDTO): Promise<User> {
+    const email = userDTO.email;
+    const emailTaken = await this.userModel.findOne({ email: email });
+    if (emailTaken) {
+       return null
+    }
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(userDTO.password, salt);
     const newUser = new this.userModel({
