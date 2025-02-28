@@ -5,5 +5,5 @@ export class updateCommentDto{
     comment:string
 
     @ApiProperty()
-    calificacion:number;
+    calification:number;
 }
