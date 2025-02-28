@@ -248,53 +248,36 @@ export class CrudService {
     const user = await this.userModel.findById(idUser);
     comment.idUser = user.id;
     comment.userName = user.name;
+    const fechaUTC:Date = new Date();
+    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+    comment.date = fechaGMT4;
     restaurant.reviews.push(comment);
     return await restaurant.save();
   }
 
-  async updateComment(idRestaurant: string, index: number, data: any, userId: string,resp:Response):Promise<any> {
+  async updateComment(idRestaurant: string, idComment: string, data: any, userId: string):Promise<any> 
+{
     try {
       const { comment, calificacion } = data;
-  
-      
       const restaurant = await this.restaurantModel.findById(idRestaurant);
-      if (!restaurant) {
-      resp.status(400).json({
-          message:"Restaurant doesnt exist"
-        });
-        return null
+     // console.log(restaurant)
+      const commentToUpdate = restaurant.reviews.find((c) => c._id.toString() == idComment);
+      //console.log(commentToUpdate)
+      if (!commentToUpdate || commentToUpdate.idUser !== userId) {
+        return null;
       }
-  
-      const comentarioIndex = restaurant.reviews[index];
-      if (!comentarioIndex) {
-         resp.status(404).json({
-          message:"Comment doesnt exist"
-        });
-        return null
-      }
-  
-      if (comentarioIndex.idUser !== userId) {
-         resp.status(400).json({
-          message:"User is not authorized to update this comment"
-        });
-        return null
-      }
-  
+      
       if (comment !== undefined) {
-        comentarioIndex.comment = comment;
+        commentToUpdate.comment = comment;
       }
   
       if (calificacion !== undefined) {
-        comentarioIndex.calification = calificacion;
+        commentToUpdate.calification = calificacion;
       }
-  
-      //console.log(comentarioIndex);
-  
-      restaurant.markModified(`reviews.${index}`);
-  
-      await restaurant.save();
-  
-      //console.log(restaurant);
+      const fechaUTC:Date = new Date();
+      const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+      commentToUpdate.date = fechaGMT4;
+    await restaurant.save();
     return restaurant
     } catch (error) {
       console.error(error);

@@ -1,10 +1,12 @@
 import { Document } from "mongoose";
 
 export interface reviewObject {
+  _id:string;
   idUser: string;
   userName:string;
   comment: string;
   calification: number;
+  date:Date;
   responses: reviewObject[];
 }
 

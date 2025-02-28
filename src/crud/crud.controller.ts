@@ -549,24 +549,25 @@ export class CrudController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update Restaurants comment' })
   @ApiResponse({ status: 200, description: 'comentario actualizado' })
-  @ApiResponse({ status: 400, description: 'User is not authorized to update this comment' })
-  @ApiResponse({ status: 404, description: 'Comments doesnt exist' })
-  @ApiResponse({ status: 404, description: 'Restaurant doesnt exist' })
+  @ApiResponse({ status: 400, description: 'Error al actualizar comentario' })
   @ApiBody({ type:  updateCommentDto})
-  @Post('updateComment/:idRestaurant/:index')
+  @Post('updateComment/:idRestaurant/:idComment')
   async updateComment(@Param('idRestaurant') idRes:string,
-                      @Param('index')index:number,
+                      @Param('idComment')idComment:string,
                       @Body() updateData:any,
                       @Res() resp,
                       @Request() req){
     try{
       const idUser = req.user.userId;
-      const updatedComment = await this.crudService.updateComment(idRes,index,updateData,idUser,resp)
-      if(updatedComment){
-        return resp.status(200).json({
-        message:"comentario actualizado"
+      const updatedComment = await this.crudService.updateComment(idRes,idComment,updateData,idUser)
+      if(!updatedComment){
+        return resp.status(400).json({
+        message:"Error al actualizar comentario"
       })
     }
+    return resp.status(200).json({
+      message:"comentario actualizado"
+    })
     }catch(err){
       console.error(err)
     }
