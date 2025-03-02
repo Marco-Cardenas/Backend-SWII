@@ -551,7 +551,7 @@ export class CrudController {
   @ApiResponse({ status: 200, description: 'comentario actualizado' })
   @ApiResponse({ status: 400, description: 'Error al actualizar comentario' })
   @ApiBody({ type:  updateCommentDto})
-  @Post('updateComment/:idRestaurant/:idComment')
+  @Put('updateComment/:idRestaurant/:idComment')
   async updateComment(@Param('idRestaurant') idRes:string,
                       @Param('idComment')idComment:string,
                       @Body() updateData:any,
