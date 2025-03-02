@@ -459,46 +459,63 @@ export class CrudController {
   @UseGuards(JwtAuthGuard)
   @Put('deleteRestaurantsFromShowed/:idUser')
   @ApiOperation({ summary: 'Delete restaurants from showed list by user ID' })
-  @ApiParam({ name: 'idUser', description: 'User ID' })
-  @ApiBody({ description: 'List of restaurant IDs to delete', type: Object })
-  @ApiResponse({ status: 200, description: 'Restaurants deleted from showed list successfully.', schema: {
-    example: {
-      message: 'Restaurantes eliminados del historial',
-      result: {},
+  @ApiParam({ name: 'idUser', description: 'User ID', type: String })
+  @ApiBody({
+    description: 'List of restaurant IDs to delete from history',
+    schema: {
+      example: {
+        idRestaurants: ['67b72b65d459601debcb9dd4'],
+      },
     },
-  }})
-  async deleteRestaurantsFromShowed(@Res() resp, @Param('idUser') userID: string, @Body() body: { idRestaurants: string[] }) {
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Restaurants deleted from showed list successfully.',
+    schema: {
+      example: {
+        resultado: 'Restaurantes eliminados del historial',
+      },
+    },
+  })
+  async deleteRestaurantsFromShowed(
+    @Res() resp,
+    @Param('idUser') userID: string,
+    @Body() body: { idRestaurants: string[] },
+  ) {
     const result = await this.crudService.deleteRestaurantsFromShowed(userID, body.idRestaurants);
     return resp.status(HttpStatus.OK).json(result);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('deleteRestaurantFromLiked/:idUser')
-  @ApiOperation({ summary: 'Delete restaurant from liked list by user ID' })
-  @ApiParam({ name: 'idUser', description: 'User ID' })
-  @ApiBody({ description: 'List of restaurant IDs to delete', type: Object })
-  @ApiResponse({ status: 200, description: 'Restaurant deleted from liked list successfully.', schema: {
-    example: {
-      message: 'Restaurante eliminado de favoritos',
-      result: {},
-    },
-  }})
-  async deleteRestaurantFromLiked(@Res() resp, @Param('idUser') userID: string, @Body() body: { idRestaurants: string[] }) {
-    const result = await this.crudService.deleteRestaurantFromLiked(userID, body.idRestaurants);
-    return resp.status(HttpStatus.OK).json(result);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('getEscaneoNearUserFromDistance/:latitud/:longitud/:anguloCamara/:distanciaRequerida')
-  @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle and a specific distance' })
-  @ApiResponse({
-    status: 200, description: 'Nearby restaurants retrieved successfully within the specified distance.', schema: {
+  @ApiOperation({ summary: 'Delete restaurants from liked list by user ID' })
+  @ApiParam({ name: 'idUser', description: 'User ID', type: String })
+  @ApiBody({
+    description: 'List of restaurant IDs to delete from favorites',
+    schema: {
       example: {
-        message: 'Restaurantes cercanos dentro de la distancia',
-        escaneosNear: [],
+        idRestaurants: ['67b72b65d459601debcb9dd4'],
       },
     },
   })
+  @ApiResponse({
+    status: 200,
+    description: 'Restaurants deleted from liked list successfully.',
+    schema: {
+      example: {
+        resultado: 'Restaurantes eliminados de favoritos',
+      },
+    },
+  })
+  async deleteRestaurantFromLiked(
+    @Res() resp,
+    @Param('idUser') userID: string,
+    @Body() body: { idRestaurants: string[] },
+  ) {
+    const result = await this.crudService.deleteRestaurantFromLiked(userID, body.idRestaurants);
+    return resp.status(HttpStatus.OK).json(result);
+  }
+  
   async getEscaneoNearUserFromDistance( @Res() respuesta: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number, @Param('distanciaRequerida') distanciaRequerida: number) {
     const escaneosNear = await this.crudService.getEscaneoNearUserFromDistance(latitud, longitud,anguloCamara,distanciaRequerida);
     return respuesta.status(200).json({
