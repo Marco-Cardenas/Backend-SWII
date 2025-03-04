@@ -21,4 +21,7 @@ export class CreateDenunciaDTO {
 
   @ApiProperty({ description: 'Date of the complaint' })
   fecha: Date;
+
+  @ApiProperty({ description: 'Tiempo del baneo en Segundos' })
+  tiempoBaneo: Number;
 }

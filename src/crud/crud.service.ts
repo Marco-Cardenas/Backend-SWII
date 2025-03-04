@@ -239,14 +239,14 @@ export class CrudService {
     return restaurantDeleted;
   }
 
-  async addComment(idRestaurant:string,comment:reviewObject,idUser:string):Promise<any>{
+  async addComment(idRestaurant:string, comment:reviewObject, idUser:string):Promise<any>{
 
-      const restaurant = await this.restaurantModel.findById(idRestaurant)
-      if(!restaurant){
-        return null
-      }
+    const restaurant = await this.restaurantModel.findById(idRestaurant);
+    if(!restaurant){
+      return null;
+    }
     const user = await this.userModel.findById(idUser);
-    comment.idUser = user.id;
+    comment.idUser = idUser;
     comment.userName = user.name;
     const fechaUTC:Date = new Date();
     const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
@@ -255,8 +255,7 @@ export class CrudService {
     return await restaurant.save();
   }
 
-  async updateComment(idRestaurant: string, idComment: string, data: any, userId: string):Promise<any> 
-{
+  async updateComment(idRestaurant: string, idComment: string, data: any, userId: string):Promise<any> {
     try {
       const { comment, calificacion } = data;
       const restaurant = await this.restaurantModel.findById(idRestaurant);
@@ -277,11 +276,9 @@ export class CrudService {
       const fechaUTC:Date = new Date();
       const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
       commentToUpdate.date = fechaGMT4;
-    await restaurant.save();
-    return restaurant
-    } catch (error) {
-      console.error(error);
-    }
+      await restaurant.save();
+    return restaurant;
+    } catch (error) { console.error(error); }
   }
   
   
@@ -293,7 +290,7 @@ export class CrudService {
   }
 
   async getAllDenuncias(opciones: any): Promise<Denuncia[]> {
-    const denunciasFound = await this.denunciaModel.find({opciones});
+    const denunciasFound = await this.denunciaModel.find(opciones);
     return denunciasFound;
   }
 
@@ -313,5 +310,40 @@ export class CrudService {
     const denunciaDeleted = await this.denunciaModel.findByIdAndDelete(denunciaID, {new:false});
     return denunciaDeleted;
   }
+  async agregarDenunciaComentario(idComentario: string, idRestaurante: string, observacion: string, idDenunciante: string) {
+    const fechaUTC:Date = new Date();
+    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+    const denunciarComentario = {
+      "observacion": observacion,
+      "idComentario": idComentario,
+      "idDenunciado": idRestaurante,
+      "idDenunciante": idDenunciante,
+      "fecha": fechaGMT4
+    };
+    const comentarioDenunciado = await this.denunciaModel.create(denunciarComentario);
+    return await comentarioDenunciado.save();
+  }
 
+  async agregarDenunciaRestaurante(idRestaurante: string, observacion: string, idDenunciante: string) {
+    const fechaUTC:Date = new Date();
+    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+    const denunciarRestaurante = {
+      "observacion": observacion,
+      "idDenunciado": idRestaurante,
+      "idDenunciante": idDenunciante,
+      "fecha": fechaGMT4
+    };
+    const restauranteDenunciado = await this.denunciaModel.create(denunciarRestaurante);
+    return await restauranteDenunciado.save();
+  }
+
+  async procesarDenuncia(denunciaID: string, denunciaData: any, adminID: string): Promise<Denuncia> {
+    //el valor {new:true} se usa para retornar la denuncia despues de actualizarla
+    const denuncia = {
+      ...denunciaData,
+      "idAdministrador":adminID
+    }
+    const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, {new:true});
+    return denunciaProcesada;
+  }
 }

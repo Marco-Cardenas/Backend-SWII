@@ -44,7 +44,7 @@ export class CrudController {
       return resp.status(HttpStatus.UNAUTHORIZED).json({
         message:"Email duplicado"
       });
-  }
+    }
     const token = await this.authService.login(newUser);
     return resp.status(HttpStatus.OK).json({
       message: 'Usuario Creado',
@@ -99,7 +99,7 @@ export class CrudController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('getUsers/:id')
+  @Get('getUser/:id')
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User found.', schema: {
@@ -182,25 +182,6 @@ export class CrudController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('getUser/:idUser')
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiParam({ name: 'idUser', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'User found.', schema: {
-    example: {
-      message: 'Usuario Encontrado',
-      userFound: {},
-    },
-  }})
-  @ApiResponse({ status: 404, description: 'User not found.' })
-  async getUserById(@Res() resp, @Param('idUser') userID: string) {
-    const userFound = await this.crudService.getUser(userID);
-    return resp.status(HttpStatus.OK).json({
-      message: 'Usuario Encontrado',
-      userFound: userFound
-    });
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('getRestaurantsLiked/:idUser')
   @ApiOperation({ summary: 'Get liked restaurants by user ID' })
   @ApiParam({ name: 'idUser', description: 'User ID' })
@@ -274,7 +255,7 @@ export class CrudController {
     if(user.typo == 'admin') {
       newRestaurant = await this.crudService.createRestaurant(restaurantDTO);
     }
-    else if(user.typo == 'user'){
+    else {
       restaurantDTO.own = req.user.userId; //Se establece al usuario como dueño
       
       await this.crudService.updateUser(req.user.userId, { typo: "propietario" }); //Se actualiza el typo de usuario (a propietario)
@@ -287,6 +268,7 @@ export class CrudController {
     });
   }
 
+  //EDITAR
   @UseGuards(JwtAuthGuard)
   @Get('getRestaurants')
   @ApiOperation({ summary: 'Get all restaurants' })
@@ -477,11 +459,7 @@ export class CrudController {
       },
     },
   })
-  async deleteRestaurantsFromShowed(
-    @Res() resp,
-    @Param('idUser') userID: string,
-    @Body() body: { idRestaurants: string[] },
-  ) {
+  async deleteRestaurantsFromShowed(@Res() resp, @Param('idUser') userID: string, @Body() body: { idRestaurants: string[] }) {
     const result = await this.crudService.deleteRestaurantsFromShowed(userID, body.idRestaurants);
     return resp.status(HttpStatus.OK).json(result);
   }
@@ -507,11 +485,7 @@ export class CrudController {
       },
     },
   })
-  async deleteRestaurantFromLiked(
-    @Res() resp,
-    @Param('idUser') userID: string,
-    @Body() body: { idRestaurants: string[] },
-  ) {
+  async deleteRestaurantFromLiked(@Res() resp, @Param('idUser') userID: string, @Body() body: { idRestaurants: string[] }) {
     const result = await this.crudService.deleteRestaurantFromLiked(userID, body.idRestaurants);
     return resp.status(HttpStatus.OK).json(result);
   }
@@ -520,7 +494,7 @@ export class CrudController {
     const escaneosNear = await this.crudService.getEscaneoNearUserFromDistance(latitud, longitud,anguloCamara,distanciaRequerida);
     return respuesta.status(200).json({
       message: 'Restaurantes cercanos dentro de la distancia',
-      escaneosNear,
+      escaneosNear
     });
   }
 
@@ -543,12 +517,10 @@ export class CrudController {
     },
   }})
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
-  async addComentario(@Param('idRestaurant') idRestaurant:string ,
-   @Body() coment:reviewObject,
-    @Res() resp:Response,@Request() req){
+  async addComentario(@Param('idRestaurant') idRestaurant:string, @Body() coment:reviewObject, @Res() resp, @Request() req){
     try{
       const idUser = req.user.userId;
-      const restaurantComment = await this.crudService.addComment(idRestaurant,coment,idUser)
+      const restaurantComment = await this.crudService.addComment(idRestaurant, coment, idUser);
       if(!restaurantComment){
         return resp.status(404).json({
           message:"Restaurant not found"
@@ -558,9 +530,7 @@ export class CrudController {
       resp.status(201).json({
         message:"comment added sucessfully"
       })
-    }catch(err){
-      console.error(err)
-    }
+    } catch(err) { console.error(err); }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -569,30 +539,24 @@ export class CrudController {
   @ApiResponse({ status: 400, description: 'Error al actualizar comentario' })
   @ApiBody({ type:  updateCommentDto})
   @Put('updateComment/:idRestaurant/:idComment')
-  async updateComment(@Param('idRestaurant') idRes:string,
-                      @Param('idComment')idComment:string,
-                      @Body() updateData:any,
-                      @Res() resp,
-                      @Request() req){
+  async updateComment(@Param('idRestaurant') idRes:string, @Param('idComment') idComment:string, @Body() updateData:any, @Res() resp, @Request() req) {
     try{
       const idUser = req.user.userId;
       const updatedComment = await this.crudService.updateComment(idRes,idComment,updateData,idUser)
       if(!updatedComment){
         return resp.status(400).json({
-        message:"Error al actualizar comentario"
-      })
-    }
-    return resp.status(200).json({
-      message:"comentario actualizado"
-    })
-    }catch(err){
-      console.error(err)
-    }
+          message:"Error al actualizar comentario"
+        });
+      }
+      return resp.status(200).json({
+        message:"comentario actualizado"
+      });
+    } catch(err){ console.error(err); }
   }
 
   //!Denuncias
-  //@UseGuards(JwtAuthGuard)
-  @Get('getDenuncias/:option')
+  @UseGuards(JwtAuthGuard)
+  @Get('getDenuncias')
   @ApiParam({ name: 'option', type: 'string', description: 'Filter param' })
   @ApiOperation({ summary: 'Get all denuncies' })
   @ApiResponse({
@@ -609,24 +573,61 @@ export class CrudController {
       },
     },
   })
-  async getDenuncia(@Param('option') option:string,@Res() resp:Response){
-    try{
+  async getDenuncias(@Res() respuesta) {
+    const denuncias = await this.crudService.getAllDenuncias({});
+    return respuesta.HttpStatus(HttpStatus.OK).json({
+      message: "Todas las denuncias encontradas",
+      denuncias
+    });
+  }
 
-      const denuncies = await this.crudService.getAllDenuncias(option);
+  @UseGuards(JwtAuthGuard)
+  @Post('filtrarDenuncias')
+  async filtrarDenuncias(@Res() respuesta, @Body() opcionesFiltrado: any) {
+    const denunciasFiltradas = await this.crudService.getAllDenuncias(opcionesFiltrado);
+    return respuesta.HttpStatus(HttpStatus.OK).json({
+      message: "Denuncias encontradas con el filtro",
+      denunciasFiltradas
+    });
+  }
 
-      if(denuncies.length === 0){
-        return resp.status(404).json({
-          message:"Denuncies not found"
-        })
-      }
+  @UseGuards(JwtAuthGuard)
+  @Post('getDenuncia/:id')
+  async getDenuncia(@Res() respuesta, @Param('id') idDenuncia: string) {
+    const denunciaEncontrada = await this.crudService.getDenuncia(idDenuncia);
+    return respuesta.HttpStatus(HttpStatus.OK).json({
+      message: "Denuncia encontrada",
+      denunciaEncontrada
+    });
+  }
 
-      resp.status(200).json({
-        denuncies
-      })
+  @UseGuards(JwtAuthGuard)
+  @Post('procesarDenuncia/:id')
+  async procesarDenuncia(@Res() respuesta, @Param('id') idDenuncia: string, @Body() estadoDenuncia: any, @Request() req) {
+    const denunciaProcesada = await this.crudService.procesarDenuncia(idDenuncia, estadoDenuncia, req.user.userId);
+    return respuesta.HttpStatus(HttpStatus.OK).json({
+      message: "Denuncia Procesada",
+      denunciaProcesada
+    });
+  }
 
-    }catch(err){
-      console.error(err)
-    }
+  //Tipo de estado del comentario: EN PROCESO, BANEADO, OMITIDO
+  @UseGuards(JwtAuthGuard)
+  @Post('denunciarComentario/:idRestaurante/:idComentario')
+  async denunciarComentario(@Res() respuesta, @Param('idComentario') idComentario: string, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
+    await this.crudService.agregarDenunciaComentario(idComentario, idRestaurante, obs.observacion, req.user.userId);
+    return respuesta.HttpStatus(HttpStatus.OK).json({
+      message: "Comentario denunciado correctamente"
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('denunciarRestaurante/:idRestaurante')
+  async denunciarRestaurante(@Res() respuesta, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
+    await this.crudService.agregarDenunciaRestaurante(idRestaurante, obs.observacion, req.user.userId);
+    return respuesta.HttpStatus(HttpStatus.OK).json({
+      message: "Restaurante denunciado correctamente"
+    });
   }
 
 }

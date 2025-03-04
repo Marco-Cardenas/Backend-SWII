@@ -8,4 +8,5 @@ export interface Denuncia extends Document {
   idAdministrador: string;
   tipo: string;
   fecha: Date;
+  tiempoBaneo: number;
 }
