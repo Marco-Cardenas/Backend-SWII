@@ -40,7 +40,7 @@ export class CrudService {
   }
 
 
-  async getEscaneoNearUserFromDistance(latitud: number, longitud: number, anguloCamara: number, distanciaRequerida: number) {
+  async getNearbyRestaurants(latitud: number, longitud: number, anguloCamara: number, distanciaRequerida: number) {
     // Conversión de grados a radianes
     const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
       
