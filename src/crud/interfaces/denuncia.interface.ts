@@ -1,6 +1,7 @@
 import { Document } from "mongoose";
 
 export interface Denuncia extends Document {
+  razon: string;
   observacion: string;
   idComentario: string;
   idDenunciado: string;

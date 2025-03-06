@@ -1,6 +1,7 @@
 import { Schema } from "mongoose";
 
 export const DenunciaSchema = new Schema({
+  razon: {type:String, default:''},
   observacion: {type:String, default:''},
   idComentario: {type:String, default:''},
   idDenunciado: {type:String, default:''},

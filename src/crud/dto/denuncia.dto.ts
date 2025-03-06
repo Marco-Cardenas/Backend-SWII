@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDenunciaDTO {
+  @ApiProperty({ description: 'Reason of the complaint' })
+  razon: string;
+
   @ApiProperty({ description: 'Observation of the complaint' })
   observacion: string;
 

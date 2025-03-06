@@ -327,10 +327,11 @@ export class CrudService {
     const denunciaDeleted = await this.denunciaModel.findByIdAndDelete(denunciaID, {new:false});
     return denunciaDeleted;
   }
-  async agregarDenunciaComentario(idComentario: string, idRestaurante: string, observacion: string, idDenunciante: string) {
+  async agregarDenunciaComentario(idComentario: string, idRestaurante: string, observacion: string, razon: string, idDenunciante: string) {
     const fechaUTC:Date = new Date();
     const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
     const denunciarComentario = {
+      "razon":razon,
       "observacion": observacion,
       "idComentario": idComentario,
       "idDenunciado": idRestaurante,
@@ -341,10 +342,11 @@ export class CrudService {
     return await comentarioDenunciado.save();
   }
 
-  async agregarDenunciaRestaurante(idRestaurante: string, observacion: string, idDenunciante: string) {
+  async agregarDenunciaRestaurante(idRestaurante: string, observacion: string, razon: string, idDenunciante: string) {
     const fechaUTC:Date = new Date();
     const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
     const denunciarRestaurante = {
+      "razon":razon,
       "observacion": observacion,
       "idDenunciado": idRestaurante,
       "idDenunciante": idDenunciante,

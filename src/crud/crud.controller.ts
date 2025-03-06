@@ -654,7 +654,7 @@ async createAdmin(
   @UseGuards(JwtAuthGuard)
   @Post('denunciarComentario/:idRestaurante/:idComentario')
   async denunciarComentario(@Res() respuesta, @Param('idComentario') idComentario: string, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
-    await this.crudService.agregarDenunciaComentario(idComentario, idRestaurante, obs.observacion, req.user.userId);
+    await this.crudService.agregarDenunciaComentario(idComentario, idRestaurante, obs.observacion, obs.razon, req.user.userId);
     return respuesta.HttpStatus(HttpStatus.OK).json({
       message: "Comentario denunciado correctamente"
     });
@@ -663,7 +663,7 @@ async createAdmin(
   @UseGuards(JwtAuthGuard)
   @Post('denunciarRestaurante/:idRestaurante')
   async denunciarRestaurante(@Res() respuesta, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
-    await this.crudService.agregarDenunciaRestaurante(idRestaurante, obs.observacion, req.user.userId);
+    await this.crudService.agregarDenunciaRestaurante(idRestaurante, obs.observacion, obs.razon, req.user.userId);
     return respuesta.HttpStatus(HttpStatus.OK).json({
       message: "Restaurante denunciado correctamente"
     });
