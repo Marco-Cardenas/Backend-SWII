@@ -23,8 +23,8 @@ export class AuthService {
 
   async loginFromMongoose(user: any) {
     const userDoc = user._doc; 
-    const { email, _id } = userDoc;
-    const payload = { email, sub: _id };
+    const { email, _id, typo } = userDoc;
+    const payload = { email, sub: _id,typo: typo};
   
     return {
       access_token: this.jwtService.sign(payload),
@@ -32,7 +32,7 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { email: user.email, sub: user._id.toString() };
+    const payload = { email: user.email, sub: user._id.toString(),typo: user.typo };
     return {
       access_token: this.jwtService.sign(payload),
     };
@@ -40,7 +40,7 @@ export class AuthService {
 
   async register(userDTO: CreateUserDTO) {
     const user = await this.crudService.createUser(userDTO);
-    const payload = { email: user.email, sub: user._id };
+    const payload = { email: user.email, sub: user._id,typo: user.typo};
     return {
       access_token: this.jwtService.sign(payload),
     };

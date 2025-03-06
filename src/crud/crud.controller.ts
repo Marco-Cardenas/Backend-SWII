@@ -12,6 +12,8 @@ import { CreateUserSwaggerDTO } from './dto/create-user-swagger.dto';
 import { reviewObject } from './interfaces/restaurant.interface';
 import { Types,ObjectId } from 'mongoose';
 import { updateCommentDto } from './dto/update-comment.dto';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @ApiTags('api')
 @Controller('api')
@@ -51,6 +53,33 @@ export class CrudController {
       token: token.access_token
     });
   }
+
+@Post('createAdmin')
+@UseGuards(JwtAuthGuard, RolesGuard) 
+@Roles('admin') // Solo admins pueden acceder
+@ApiOperation({ summary: 'Create a new admin (admin only)' })
+@ApiBody({ type: CreateUserSwaggerDTO })
+@ApiResponse({ 
+  status: 200, 
+  description: 'Admin created successfully.',
+})
+@ApiResponse({ status: 400, description: 'Bad request.' })
+@ApiResponse({ status: 401, description: 'Email duplicado' })
+@ApiResponse({ status: 403, description: 'Forbidden. Requires admin role' })
+async createAdmin(
+  @Res() resp,
+  @Body() adminDTO: CreateUserDTO,
+) {
+  const newAdmin = await this.crudService.createAdmin(adminDTO);
+  if (!newAdmin) {
+    return resp.status(HttpStatus.UNAUTHORIZED).json({
+      message: "Email duplicado"
+    });
+  }
+  return resp.status(HttpStatus.OK).json({
+    message: 'Administrador creado exitosamente',
+  });
+}
 
   @Post('login')
   @ApiOperation({ summary: 'User login' })

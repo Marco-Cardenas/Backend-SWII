@@ -121,6 +121,23 @@ export class CrudService {
     return await newUser.save();
   }
 
+  async createAdmin(adminDTO: CreateUserDTO): Promise<User> {
+    const email = adminDTO.email;
+    const emailTaken = await this.userModel.findOne({ email });
+    if (emailTaken) return null;
+  
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(adminDTO.password, salt);
+    
+    const newAdmin = new this.userModel({
+      ...adminDTO,
+      password: hashedPassword,
+      typo: 'admin',
+    });
+  
+    return await newAdmin.save();
+  }
+
   async getAllUsers(opciones: any): Promise<User[]> {
     const usersFound = await this.userModel.find(opciones);
     return usersFound;
