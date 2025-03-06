@@ -15,6 +15,9 @@ export class CreateRestaurantDTO {
   @ApiProperty({ description: 'Restaurant description' })
   description: string;
 
+  @ApiProperty({ description: 'Etiquetas del restaurante' })
+  etiquetas: string[];
+
   @ApiProperty({ description: 'Restaurant address' })
   address: string;
   

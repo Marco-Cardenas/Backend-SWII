@@ -16,6 +16,7 @@ export const RestaurantSchema = new Schema({
   own: { type: String, default: '' },
   fotoPerfil: { type: String, default: '' },
   description: { type: String, default: '' },
+  etiquetas: {type: Array<String>, default:[]},
   address: { type: String, default: '' },
   latitude: { type: Number, default: 0 },
   longitude: { type: Number, default: 0 },

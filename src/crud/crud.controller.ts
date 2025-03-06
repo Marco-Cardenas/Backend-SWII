@@ -631,7 +631,7 @@ async createAdmin(
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('getDenuncia/:id')
+  @Get('getDenuncia/:id')
   async getDenuncia(@Res() respuesta, @Param('id') idDenuncia: string) {
     const denunciaEncontrada = await this.crudService.getDenuncia(idDenuncia);
     return respuesta.HttpStatus(HttpStatus.OK).json({
