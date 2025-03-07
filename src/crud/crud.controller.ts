@@ -631,6 +631,35 @@ async createAdmin(
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Obtain a report based on its ID.',
+    description: `
+      Performs a query of the complaint database, and looks for a match based on the complaint ID.
+      - The idComentario is the position (index) in the database of Denuncia.
+    `
+    ,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Se ha encontrado una denuncia que concuerda con el ID',
+    schema: {
+      example: {
+        razon: 'Comentario Despectivo',
+        observacion: 'Es un insulto creal a una etnia',
+        idComentario: '3',
+        idDenunciado: '67bdc873461c09f13d2326db',
+        idDenunciante: '67bdc873461c09f13d2326db',
+        idAdministrador: '67bdc873461c09f13d2326db',
+        tipo: 'EN PROCESO',
+        fecha: 'Tue Mar 26 2024 10:30:00',
+        tiempoBaneo: '4'
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'No se ha encontrado coincidencias'
+  })
   @Get('getDenuncia/:id')
   async getDenuncia(@Res() respuesta, @Param('id') idDenuncia: string) {
     const denunciaEncontrada = await this.crudService.getDenuncia(idDenuncia);
