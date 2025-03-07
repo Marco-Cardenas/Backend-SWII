@@ -146,7 +146,7 @@ async createAdmin(
     });
   }
 
-
+  
   @UseGuards(JwtAuthGuard)
   @Post('addFavoriteRestaurant')
   @ApiOperation({ summary: 'Add a restaurant to user favorites' })
@@ -648,7 +648,6 @@ async createAdmin(
   //!Denuncias
   @UseGuards(JwtAuthGuard)
   @Get('getDenuncias')
-  @ApiParam({ name: 'option', type: 'string', description: 'Filter param' })
   @ApiOperation({ summary: 'Get all denuncies' })
   @ApiResponse({
     status: 200, description: 'OK', schema: {
