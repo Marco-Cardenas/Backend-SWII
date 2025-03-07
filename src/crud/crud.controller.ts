@@ -538,6 +538,58 @@ async createAdmin(
   }
 
   //!Comentarios
+  @Get('getCommentById/:restaurantId/:commentRequested')
+  @ApiOperation({
+    summary: 'Get the comment ID',
+    description: `
+      Searches the restaurant database for the requested comment
+      - restaurantID. This is the ID of the restaurant
+      - commentText. Is the content of the comment
+    `
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Se ha detectado una coincidencia',
+    schema: {
+      example: {
+        message: 'Se ha detectado una coincidencia',
+        commentID: 0
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'No se han encontrado coincidencias',
+    schema: {
+      example: {
+        message: 'No se han encontrado coincidencias',
+        commentID: -1
+      }
+    }
+  })
+  async getCommentById(
+    @Res() respuesta: Response,
+    @Param('restaurantId') restaurantID: string,
+    @Param('commentRequested') commentRequested: string
+  ) {
+    try {
+      const commentID = await this.crudService.getCommentById(restaurantID, commentRequested);
+      if(commentID == -1) {
+        return respuesta.status(400).json({
+          message: 'No se han encontrado coincidencias',
+          commentID
+        })
+      }
+
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Se ha detectado una coincidencia',
+        commentID
+      })
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('addComment/:idRestaurant')
   @ApiOperation({ summary: 'add comment to a restaurant' })

@@ -256,6 +256,16 @@ export class CrudService {
     return restaurantDeleted;
   }
 
+  async getCommentById(restaurantID: string, commentRequested: string) {
+    // Obtenemos la informacion del restaurante
+    const dataRestaurant = await this.restaurantModel.findById(restaurantID);
+
+    // Buscamos la primera coincidencia con respecto al comentario solicitado
+    const commentID = dataRestaurant.reviews.findIndex(review => review.comment === commentRequested);
+    return commentID;
+  }
+
+
   async addComment(idRestaurant:string, comment:reviewObject, idUser:string):Promise<any>{
 
     const restaurant = await this.restaurantModel.findById(idRestaurant);
