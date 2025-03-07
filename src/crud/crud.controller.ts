@@ -693,9 +693,11 @@ async createAdmin(
   })
   @ApiResponse({
     status: 200,
-    description: 'Se ha encontrado una denuncia que concuerda con el ID',
+    description: 'Denuncia encontrada',
     schema: {
       example: {
+        message: "Denuncia encontrada",
+
         razon: 'Comentario Despectivo',
         observacion: 'Es un insulto cruel a una etnia',
         idComentario: '3',
@@ -775,4 +777,36 @@ async createAdmin(
     });
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('eliminarDenuncia/:denunciaID')
+  @ApiOperation({
+    summary: 'Delete a Denuncia based on its ID',
+    description: 'Searches the Denuncia database for a Denuncia matching the ID and deletes it.'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Denunciada eliminada correctamente',
+    schema: {
+      example: {
+        message: 'Denunciada eliminada correctamente',
+
+        razon: 'Comentario Despectivo',
+        observacion: 'Es un insulto cruel a una etnia',
+        idComentario: '3',
+        idDenunciado: '67bdc873461c09f13d2326db',
+        idDenunciante: '67bdc873461c09f13d2326db',
+        idAdministrador: '67be5b52d099ecd7755b6c21',
+        tipo: 'EN PROCESO',
+        fecha: 'Tue Mar 26 2024 10:30:00',
+        tiempoBaneo: '4'
+      }
+    }
+  })
+  async eliminarDenuncia(@Res() respuesta: Response, @Param('denunciaID') denunciaID: string) {
+    const denunciaDeleted = await this.crudService.deleteDenuncia(denunciaID);
+    return respuesta.status(HttpStatus.OK).json({
+      message: 'Denunciada eliminada correctamente',
+      denunciaDelete: denunciaDeleted
+    })
+  }
 }
