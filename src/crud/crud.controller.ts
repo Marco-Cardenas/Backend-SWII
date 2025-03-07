@@ -697,7 +697,7 @@ async createAdmin(
     schema: {
       example: {
         razon: 'Comentario Despectivo',
-        observacion: 'Es un insulto creal a una etnia',
+        observacion: 'Es un insulto cruel a una etnia',
         idComentario: '3',
         idDenunciado: '67bdc873461c09f13d2326db',
         idDenunciante: '67bdc873461c09f13d2326db',
@@ -722,6 +722,31 @@ async createAdmin(
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Send to process a Denuncia',
+    description: `
+      Send the denuncia to the Denuncia database so that an administrator can process it (Adds the administrator ID to the idAdministrador attribute).
+      - id. This is the ID of the Denuncia to be processed.
+      - The identification of the administrator processing the Denuncia is sent through the body.
+    `
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Denuncia Procesada',
+    schema: {
+      example: {
+        razon: 'Comentario Despectivo',
+        observacion: 'Es un insulto cruel a una etnia',
+        idComentario: '3',
+        idDenunciado: '67bdc873461c09f13d2326db',
+        idDenunciante: '67bdc873461c09f13d2326db',
+        idAdministrador: '67be5b52d099ecd7755b6c21',
+        tipo: 'EN PROCESO',
+        fecha: 'Tue Mar 26 2024 10:30:00',
+        tiempoBaneo: '4'
+      }
+    }
+  })
   @Post('procesarDenuncia/:id')
   async procesarDenuncia(@Res() respuesta, @Param('id') idDenuncia: string, @Body() estadoDenuncia: any, @Request() req) {
     const denunciaProcesada = await this.crudService.procesarDenuncia(idDenuncia, estadoDenuncia, req.user.userId);
