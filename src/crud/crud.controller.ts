@@ -664,19 +664,50 @@ async createAdmin(
       },
     },
   })
-  async getDenuncias(@Res() respuesta) {
+  async getDenuncias(@Res() respuesta: Response) {
     const denuncias = await this.crudService.getAllDenuncias({});
-    return respuesta.HttpStatus(HttpStatus.OK).json({
+    return respuesta.status(HttpStatus.OK).json({
       message: "Todas las denuncias encontradas",
       denuncias
     });
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Collect the Denuncia that match the established filter.',
+    description: `
+      Performs a query to the Denuncia database to obtain only those Denuncia that match the requested Denuncia characteristic or attributes. In other words, you decide which characteristic you want to filter by.
+      `
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Denuncias encontradas con el filtro',
+    schema:{
+      example: {
+        message: "Denuncias encontradas con el filtro",
+        denuncies: []
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Denuncies not found',
+    schema: {
+      example: {
+        message: 'Denuncies not found'
+      }
+    }
+  })
   @Post('filtrarDenuncias')
-  async filtrarDenuncias(@Res() respuesta, @Body() opcionesFiltrado: any) {
+  async filtrarDenuncias(@Res() respuesta: Response, @Body() opcionesFiltrado: any) {
     const denunciasFiltradas = await this.crudService.getAllDenuncias(opcionesFiltrado);
-    return respuesta.HttpStatus(HttpStatus.OK).json({
+    if (denunciasFiltradas.length === 0) {
+      return respuesta.status(400).json({
+        message: 'Denuncies not found'
+      });
+    }
+    
+    return respuesta.status(HttpStatus.OK).json({
       message: "Denuncias encontradas con el filtro",
       denunciasFiltradas
     });
@@ -688,8 +719,7 @@ async createAdmin(
     description: `
       Performs a query of the complaint database, and looks for a match based on the complaint ID.
       - The idComentario is the position (index) in the database of Denuncia.
-    `
-    ,
+    `,
   })
   @ApiResponse({
     status: 200,
@@ -715,9 +745,9 @@ async createAdmin(
     description: 'No se ha encontrado coincidencias'
   })
   @Get('getDenuncia/:id')
-  async getDenuncia(@Res() respuesta, @Param('id') idDenuncia: string) {
+  async getDenuncia(@Res() respuesta: Response, @Param('id') idDenuncia: string) {
     const denunciaEncontrada = await this.crudService.getDenuncia(idDenuncia);
-    return respuesta.HttpStatus(HttpStatus.OK).json({
+    return respuesta.status(HttpStatus.OK).json({
       message: "Denuncia encontrada",
       denunciaEncontrada
     });
@@ -752,7 +782,7 @@ async createAdmin(
   @Post('procesarDenuncia/:id')
   async procesarDenuncia(@Res() respuesta, @Param('id') idDenuncia: string, @Body() estadoDenuncia: any, @Request() req) {
     const denunciaProcesada = await this.crudService.procesarDenuncia(idDenuncia, estadoDenuncia, req.user.userId);
-    return respuesta.HttpStatus(HttpStatus.OK).json({
+    return respuesta.status(HttpStatus.OK).json({
       message: "Denuncia Procesada",
       denunciaProcesada
     });
@@ -763,7 +793,7 @@ async createAdmin(
   @Post('denunciarComentario/:idRestaurante/:idComentario')
   async denunciarComentario(@Res() respuesta, @Param('idComentario') idComentario: string, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
     await this.crudService.agregarDenunciaComentario(idComentario, idRestaurante, obs.observacion, obs.razon, req.user.userId);
-    return respuesta.HttpStatus(HttpStatus.OK).json({
+    return respuesta.status(HttpStatus.OK).json({
       message: "Comentario denunciado correctamente"
     });
   }
@@ -772,7 +802,7 @@ async createAdmin(
   @Post('denunciarRestaurante/:idRestaurante')
   async denunciarRestaurante(@Res() respuesta, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
     await this.crudService.agregarDenunciaRestaurante(idRestaurante, obs.observacion, obs.razon, req.user.userId);
-    return respuesta.HttpStatus(HttpStatus.OK).json({
+    return respuesta.status(HttpStatus.OK).json({
       message: "Restaurante denunciado correctamente"
     });
   }
