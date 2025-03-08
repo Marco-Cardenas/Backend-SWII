@@ -161,7 +161,6 @@ async createAdmin(
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('forgotPassword')
   @ApiOperation({ summary: 'Checks if an email exists in the database' })
   @ApiResponse({ status: 200, description: 'Este correo existe' })
@@ -179,13 +178,15 @@ async createAdmin(
     })
   }
   
-  @UseGuards(JwtAuthGuard)
-  @Post('validSecurityQuestion')
+  @Post('validSecurityQuestion/:idUser')
   @ApiOperation({ summary: 'Validates user answers to security questions' })
   @ApiResponse({ status: 200, description: 'Las preguntas y respuestas han coincidido' })
   @ApiResponse({ status: 400, description: 'Las respuestas son incorrectas' })
-  async validQuestion(@Res() respuesta: Response, @Request() req,  @Body() body: { preguntasSeguridad: { pregunta: string, respuesta: string }[]}) {
-    const isValidQuestion = await this.crudService.validSecurityQuestion(req.user.userId, body.preguntasSeguridad);
+  async validQuestion(
+    @Res() respuesta: Response, 
+    @Param('idUser') idUser: string,  
+    @Body() body: { preguntasSeguridad: { pregunta: string, respuesta: string }[]}) {
+    const isValidQuestion = await this.crudService.validSecurityQuestion(idUser, body.preguntasSeguridad);
     if(!isValidQuestion) {
       return respuesta.status(400).json({
         message: 'Las respuestas son incorrectas'
@@ -198,12 +199,14 @@ async createAdmin(
     })
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('changePassword')
+  @Post('changePassword/:idUser')
   @ApiOperation({ summary: 'Change user password using bcrypt' })
   @ApiResponse({ status: 200, description: 'Se ha actualizado la contraseña correctamente' })
-  async changePassword(@Res() respuesta: Response, @Body() body: { password: string }, @Request() req) {
-    const user = await this.crudService.changePassword(req.user.userId, body.password);
+  async changePassword(
+    @Res() respuesta: Response, 
+    @Body() body: { password: string },
+    @Param('idUser') idUser: string) {
+    const user = await this.crudService.changePassword(idUser, body.password);
     return respuesta.status(HttpStatus.OK).json({
       message: 'Se ha actualizado la contrasena correctamente'
     })
