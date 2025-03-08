@@ -296,7 +296,9 @@ async createAdmin(
     const user = await this.crudService.getUser(req.user.userId);
     let newRestaurant = undefined;
     if(user.typo == 'admin') {
-      newRestaurant = await this.crudService.createRestaurant(restaurantDTO);
+      return respuesta.status(HttpStatus.OK).json({
+        message:"Administradores no pueden crear restaurantes"
+      });
     }
     else {
       restaurantDTO.own = req.user.userId; //Se establece al usuario como dueño
