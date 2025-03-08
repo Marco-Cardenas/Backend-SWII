@@ -608,6 +608,13 @@ async createAdmin(
   
   @Get('getNearbyRestaurants/:latitud/:longitud/:anguloCamara/:distanciaRequerida/:userId')
   @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle and a specific distance' })
+    @ApiBody({ 
+    schema: {
+      example: {
+        foto: "string"
+      }
+    }
+  })
   @ApiResponse({
     status: 200, description: 'Nearby restaurants retrieved successfully within the specified distance.', schema: {
       example: {
