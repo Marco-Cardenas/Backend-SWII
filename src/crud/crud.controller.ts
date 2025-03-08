@@ -606,7 +606,7 @@ async createAdmin(
     return resp.status(HttpStatus.OK).json(result);
   }
   
-  @Get('getNearbyRestaurants/:latitud/:longitud/:anguloCamara/:distanciaRequerida')
+  @Get('getNearbyRestaurants/:latitud/:longitud/:anguloCamara/:distanciaRequerida/:userId')
   @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle and a specific distance' })
   @ApiResponse({
     status: 200, description: 'Nearby restaurants retrieved successfully within the specified distance.', schema: {
@@ -616,8 +616,18 @@ async createAdmin(
       },
     },
   })
-  async getNearbyRestaurants( @Res() respuesta: Response, @Param('latitud') latitud: number, @Param('longitud') longitud: number, @Param('anguloCamara') anguloCamara: number, @Param('distanciaRequerida') distanciaRequerida: number) {
-    const escaneosNear = await this.crudService.getNearbyRestaurants(latitud, longitud,anguloCamara,distanciaRequerida);
+  async getNearbyRestaurants( 
+    @Res() respuesta: Response, 
+    @Param('latitud') latitud: number, 
+    @Param('longitud') longitud: number, 
+    @Param('anguloCamara') anguloCamara: number,
+    @Param('distanciaRequerida') distanciaRequerida: number,
+    @Param('userId') userId: string,
+    @Body() foto: string
+  ) {
+    const escaneosNear = await this.crudService.getNearbyRestaurants(
+      latitud, longitud,anguloCamara,distanciaRequerida, userId, foto
+    );
     return respuesta.status(200).json({
       message: 'Restaurantes cercanos dentro de la distancia',
       escaneosNear

@@ -39,8 +39,14 @@ export class CrudService {
     return escaneo;
   }
 
-
-  async getNearbyRestaurants(latitud: number, longitud: number, anguloCamara: number, distanciaRequerida: number) {
+  async getNearbyRestaurants(
+    latitud: number, 
+    longitud: number, 
+    anguloCamara: number, 
+    distanciaRequerida: number,
+    idUser: string,
+    foto: string
+  ) {
     // Conversión de grados a radianes
     const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
       
@@ -88,6 +94,23 @@ export class CrudService {
           return { ...restaurant.toObject(), distance };
         })
         .filter(restaurant => restaurant.distance <= distanceMeter); // Filtramos por la distancia requerida
+
+    const idRestaurants = escaneosNear.map(escaneo => {
+      return escaneo._id;
+    })
+
+    const fechaUTC:Date = new Date();
+    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+    const escaneos = new this.escaneoModel({
+      foto: Buffer.from(foto).toString('base64'),
+      latitud: latitud,
+      longitud: longitud,
+      anguloCamara: anguloCamara,
+      fecha: fechaGMT4,
+      idUser: idUser,
+      restaurantesCercanos: idRestaurants
+    });
+    await this.createEscaneo(escaneos);
 
     return escaneosNear;
 }
