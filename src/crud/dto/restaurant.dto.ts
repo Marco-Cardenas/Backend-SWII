@@ -32,4 +32,7 @@ export class CreateRestaurantDTO {
 
   @ApiProperty({ description: 'Restaurant reviews' })
   reviews: reviewObject[];
+
+  @ApiProperty({ description: 'Restaurant pictures' })
+  fotos: string[];
 }

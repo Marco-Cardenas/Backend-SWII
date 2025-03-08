@@ -354,9 +354,13 @@ async createAdmin(
     //Se agrega el restaurante al historial del usuario
     await this.crudService.updateUserHistorial(req.user.userId, restaurantID);
 
+    //se verifica si el restaurante fue dado like por la persona
+    const userRestaurantLiked = await this.crudService.isRestaurantLiked(req.user.userId, restaurantID);
+  
     return respuesta.status(HttpStatus.OK).json({
       message: 'Restaurante Encontrado',
-      restaurantFound
+      restaurantFound,
+      userRestaurantLiked
     });
   }
 
@@ -657,20 +661,15 @@ async createAdmin(
   @ApiResponse({ status: 200, description: 'comentario actualizado' })
   @ApiResponse({ status: 400, description: 'Error al actualizar comentario' })
   @ApiBody({ type:  updateCommentDto})
-  @Put('updateComment/:idRestaurant/:idComment')
-  async updateComment(@Param('idRestaurant') idRes:string, @Param('idComment') idComment:string, @Body() updateData:any, @Res() resp, @Request() req) {
-    try{
-      const idUser = req.user.userId;
-      const updatedComment = await this.crudService.updateComment(idRes,idComment,updateData,idUser)
-      if(!updatedComment){
-        return resp.status(400).json({
-          message:"Error al actualizar comentario"
-        });
-      }
-      return resp.status(200).json({
-        message:"comentario actualizado"
-      });
-    } catch(err){ console.error(err); }
+  @Put('updateComment/:idRestaurant')
+  async updateComment(@Param('idRestaurant') idRes:string, @Body() updateData:any, @Res() resp, @Request() req) {
+    const idUser = req.user.userId;
+    const updatedComment = await this.crudService.updateComment(idRes,idUser,updateData);
+
+    return resp.status(HttpStatus.OK).json({
+      message: "Mensaje actualizado",
+      updatedComment
+    });
   }
 
   //!Denuncias

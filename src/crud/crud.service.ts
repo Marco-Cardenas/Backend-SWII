@@ -116,6 +116,7 @@ export class CrudService {
     const newUser = new this.userModel({
       ...userDTO,
       password: hashedPassword,
+      typo: 'user',
     });
     return await newUser.save();
   }
@@ -212,6 +213,12 @@ export class CrudService {
     return restaurantsLiked;
   }
 
+  async isRestaurantLiked(userID: string, idRestaurant: string): Promise<boolean> {
+    const user = await this.userModel.findById(userID);
+    const favorites = user.favorites;
+    return favorites.includes(idRestaurant);
+  }
+
   async getRestaurantsShowed(userID: string): Promise<Restaurant[]> {
     const user = await this.userModel.findById(userID);
     if (!user || !user.historial.length) {
@@ -300,30 +307,33 @@ export class CrudService {
     return await restaurant.save();
   }
 
-  async updateComment(idRestaurant: string, idComment: string, data: any, userId: string):Promise<any> {
-    try {
-      const { comment, calificacion } = data;
-      const restaurant = await this.restaurantModel.findById(idRestaurant);
-     // console.log(restaurant)
-      const commentToUpdate = restaurant.reviews.find((c) => c._id.toString() == idComment);
-      //console.log(commentToUpdate)
-      if (!commentToUpdate || commentToUpdate.idUser !== userId) {
-        return null;
-      }
-      
-      if (comment !== undefined) {
-        commentToUpdate.comment = comment;
-      }
-  
-      if (calificacion !== undefined) {
-        commentToUpdate.calification = calificacion;
-      }
-      const fechaUTC:Date = new Date();
-      const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
-      commentToUpdate.date = fechaGMT4;
-      await restaurant.save();
-    return restaurant;
-    } catch (error) { console.error(error); }
+  async updateComment(idRestaurant: string, idComment: string, data: any):Promise<any> {
+    const restaurant = await this.restaurantModel.findById(idRestaurant);
+    const { comment, calification } = data;
+
+    const commentToUpdate = restaurant.reviews.find((comentario) => comentario.idUser == idComment);
+    if(!commentToUpdate){
+      return null;
+    }
+
+    if(comment != undefined) {
+      commentToUpdate.comment = comment;
+    }
+
+    if(calification != undefined) {
+      commentToUpdate.calification = calification;
+    }
+
+    const fechaUTC:Date = new Date();
+    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+    commentToUpdate.date = fechaGMT4;
+    
+    const comentarioActualizado = await this.restaurantModel.findOneAndUpdate(
+      {_id:idRestaurant, 'reviews.idUser':idComment},
+      {$set: { 'reviews.$.comment':commentToUpdate.comment, 'reviews.$.calification':commentToUpdate.calification, 'reviews.$.date':commentToUpdate.date}},
+      {new:true}
+    ).exec();
+    return comentarioActualizado;
   }
   
   

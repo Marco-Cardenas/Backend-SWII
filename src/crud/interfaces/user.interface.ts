@@ -1,5 +1,10 @@
 import { Document } from "mongoose";
 
+export interface preguntasObject {
+  pregunta: string;
+  respuesta: string;
+}
+
 export interface User extends Document {
   name: string;
   email: string;
