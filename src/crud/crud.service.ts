@@ -102,7 +102,7 @@ export class CrudService {
     const fechaUTC:Date = new Date();
     const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
     const escaneos = new this.escaneoModel({
-      foto: Buffer.from(foto).toString('base64'),
+      foto: foto,
       latitud: latitud,
       longitud: longitud,
       anguloCamara: anguloCamara,

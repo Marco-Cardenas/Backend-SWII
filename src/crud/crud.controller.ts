@@ -631,15 +631,19 @@ async createAdmin(
     @Param('anguloCamara') anguloCamara: number,
     @Param('distanciaRequerida') distanciaRequerida: number,
     @Request() req,
-    @Body() foto: string
+    @Body() body: { foto: string }
   ) {
-    const escaneosNear = await this.crudService.getNearbyRestaurants(
-      latitud, longitud,anguloCamara,distanciaRequerida, req.user.userId, foto
-    );
-    return respuesta.status(200).json({
-      message: 'Restaurantes cercanos dentro de la distancia',
-      escaneosNear
-    });
+    try {
+      const escaneosNear = await this.crudService.getNearbyRestaurants(
+        latitud, longitud,anguloCamara,distanciaRequerida, req.user.userId, body.foto
+      );
+      return respuesta.status(200).json({
+        message: 'Restaurantes cercanos dentro de la distancia',
+        escaneosNear
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   //!Comentarios
