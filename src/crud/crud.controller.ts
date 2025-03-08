@@ -170,6 +170,8 @@ async createAdmin(
     if(!emailValid) {
       return respuesta.status(400).json({
         message: 'No existe este correo'
+
+
       })
     }
 
@@ -869,6 +871,15 @@ async createAdmin(
 
   //Tipo de estado del comentario: EN PROCESO, BANEADO, OMITIDO
   @UseGuards(JwtAuthGuard)
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        observacion: { type: 'string' },
+        razon: { type: 'string' }
+      }
+    }
+  })
   @Post('denunciarComentario/:idRestaurante/:idComentario')
   async denunciarComentario(@Res() respuesta, @Param('idComentario') idComentario: string, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
     await this.crudService.agregarDenunciaComentario(idComentario, idRestaurante, obs.observacion, obs.razon, req.user.userId);

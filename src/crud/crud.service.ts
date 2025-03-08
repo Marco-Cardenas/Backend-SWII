@@ -395,18 +395,24 @@ export class CrudService {
     return denunciaDeleted;
   }
   async agregarDenunciaComentario(idComentario: string, idRestaurante: string, observacion: string, razon: string, idDenunciante: string) {
-    const fechaUTC:Date = new Date();
-    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
-    const denunciarComentario = {
-      "razon":razon,
-      "observacion": observacion,
-      "idComentario": idComentario,
-      "idDenunciado": idRestaurante,
-      "idDenunciante": idDenunciante,
-      "fecha": fechaGMT4
-    };
-    const comentarioDenunciado = await this.denunciaModel.create(denunciarComentario);
-    return await comentarioDenunciado.save();
+    try {
+      const fechaUTC:Date = new Date();
+      const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+      const denunciarComentario = {
+        "razon":razon,
+        "observacion": observacion,
+        "idComentario": idComentario,
+        "idDenunciado": idRestaurante,
+        "idDenunciante": idDenunciante,
+        "fecha": fechaGMT4
+      };
+      const comentarioDenunciado = await this.denunciaModel.create(denunciarComentario);
+      return await comentarioDenunciado.save();
+    }
+    catch(error) {
+      console.error(error);
+      throw error;
+    }
   }
 
   async agregarDenunciaRestaurante(idRestaurante: string, observacion: string, razon: string, idDenunciante: string) {
