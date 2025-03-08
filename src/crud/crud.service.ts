@@ -203,6 +203,12 @@ export class CrudService {
     return restaurantsLiked;
   }
 
+  async isRestaurantLiked(userID: string, idRestaurant: string): Promise<boolean> {
+    const user = await this.userModel.findById(userID);
+    const favorites = user.favorites;
+    return favorites.includes(idRestaurant);
+  }
+
   async getRestaurantsShowed(userID: string): Promise<Restaurant[]> {
     const user = await this.userModel.findById(userID);
     if (!user || !user.historial.length) {
@@ -303,7 +309,12 @@ export class CrudService {
     const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
     commentToUpdate.date = fechaGMT4;
     
-    return await restaurant.save();
+    const comentarioActualizado = await this.restaurantModel.findOneAndUpdate(
+      {_id:idRestaurant, 'reviews.idUser':idComment},
+      {$set: { 'reviews.$.comment':commentToUpdate.comment, 'reviews.$.calification':commentToUpdate.calification, 'reviews.$.date':commentToUpdate.date}},
+      {new:true}
+    ).exec();
+    return comentarioActualizado;
   }
   
   
