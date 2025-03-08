@@ -889,6 +889,15 @@ async createAdmin(
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        observacion: { type: 'string' },
+        razon: { type: 'string' }
+      }
+    }
+  })
   @Post('denunciarRestaurante/:idRestaurante')
   async denunciarRestaurante(@Res() respuesta, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
     await this.crudService.agregarDenunciaRestaurante(idRestaurante, obs.observacion, obs.razon, req.user.userId);
