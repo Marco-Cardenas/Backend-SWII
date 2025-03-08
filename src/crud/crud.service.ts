@@ -22,7 +22,6 @@ export class CrudService {
     @InjectModel('Denuncias') private readonly denunciaModel: Model<Denuncia>
   ) {}
 
-  
   //Servicios de Escaneos
   async createEscaneo(escaneoDTO: CreateEscaneoDTO): Promise<Escaneo> {
     const newEscaneo = await this.escaneoModel.create(escaneoDTO);
@@ -152,6 +151,16 @@ export class CrudService {
     const user = await this.userModel.findOne({ email });
     return user;
   }
+
+  async getUserByName(name: string) {
+    // Retorna los usuarios que concuerdan con el nombre solicitado
+    const users = await this.getAllUsers({});
+    const usersMatch = users.filter(user => {
+      return RegExp(name, 'i').test(user.name)
+    })
+    return usersMatch;
+  }
+
   async updateUserHistorial(userID: string, viewedRestaurant: string):Promise<User> {
     //el valor {new:true} se usa para retornar el usuario despues de actualizarlo
     const historialActualizado = await this.userModel.findByIdAndUpdate(userID, { $push:{ historial:viewedRestaurant } }, {new:true});
@@ -242,6 +251,15 @@ export class CrudService {
   async getRestaurant(restaurantID: string): Promise<Restaurant> {
     const restaurant = await this.restaurantModel.findById(restaurantID);
     return restaurant;
+  }
+
+  async getRestaurantsByName(name: string) {
+    // Retorna los restaurantes que concuerdan con el nombre solicitado
+    const restaurants = await this.getAllRestaurants({});
+    const restaurantsMatch = restaurants.filter(restaurant => {
+      return RegExp(name, 'i').test(restaurant.name)
+    })
+    return restaurantsMatch;
   }
 
   async updateRestaurant(restaurantID: string, restaurantData: any): Promise<Restaurant> {

@@ -146,6 +146,20 @@ async createAdmin(
     });
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Get all names that match the requested name',
+    description: 'Performs a request to the Users database, and filters the users only by those who have a name similar to the requested one.'
+  })
+  @Get('getUserByName/:nameUser')
+  async getUserByName(@Res() resp, @Param('nameUser') nameUser: string) {
+    const userFound = await this.crudService.getUserByName(nameUser);
+    return resp.status(HttpStatus.OK).json({
+      message: 'Usuario Encontrado',
+      userFound: userFound
+    });
+  }
+
   
   @UseGuards(JwtAuthGuard)
   @Post('addFavoriteRestaurant')
@@ -343,6 +357,20 @@ async createAdmin(
     return respuesta.status(HttpStatus.OK).json({
       message: 'Restaurante Encontrado',
       restaurantFound
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Get all names that match the requested name',
+    description: 'Performs a request to the Restaurant database, and filters the Restaurant only by those who have a name similar to the requested one.'
+  })
+  @Get('getRestaurantsByName/:nameRestaurant')
+  async getRestaurantsByName(@Res() resp, @Param('nameRestaurant') nameRestaurant: string) {
+    const userFound = await this.crudService.getRestaurantsByName(nameRestaurant);
+    return resp.status(HttpStatus.OK).json({
+      message: 'Usuario Encontrado',
+      userFound: userFound
     });
   }
 
