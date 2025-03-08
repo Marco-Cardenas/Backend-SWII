@@ -14,4 +14,5 @@ export interface User extends Document {
   favorites: string[];
   historial: string[];
   typo: string;
+  preguntasDeSeguridad: preguntasObject[];
 }

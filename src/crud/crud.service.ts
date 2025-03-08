@@ -12,6 +12,7 @@ import { CreateEscaneoDTO } from './dto/escaneo.dto';
 import { CreateDenunciaDTO } from './dto/denuncia.dto';
 import { updateCommentDto } from './dto/update-comment.dto';
 import { Response } from 'express';
+import { emit } from 'process';
 
 @Injectable()
 export class CrudService {
@@ -179,6 +180,34 @@ export class CrudService {
     const userDeleted = await this.userModel.findByIdAndDelete(userID, {new:false});
     return userDeleted;
   }
+
+  async forgotPassword(email: string): Promise<boolean> {
+      const user = await this.getUserByEmail(email);
+      return user != null && user != undefined;
+  }
+
+  async validSecurityQuestion(idUser: string, preguntasDeSeguridad: { pregunta: string, respuesta: string }[]): Promise<boolean> {
+    const user = await this.getUser(idUser);
+    const isValid = user.preguntasDeSeguridad.every(preguntaUser => {
+      return preguntasDeSeguridad.some(preguntaComprobar => {
+        preguntaUser.pregunta === preguntaComprobar.pregunta && preguntaUser.respuesta === preguntaComprobar.respuesta
+      })
+    })
+    return isValid;
+  }
+
+  async changePassword(idUser: string, password: string): Promise<User> {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await this.userModel.findByIdAndUpdate(
+      idUser,
+      {password: hashedPassword},
+      {new: true}
+    );
+    return user;
+  }
+
   async addRestaurantToFavorites(userId: string, restaurantId: string): Promise<User> {
     try {
       // Buscamos el usuario

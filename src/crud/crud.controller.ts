@@ -1,4 +1,4 @@
-import { Controller, Post, Res, Body, HttpStatus, Get, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Res, Body, HttpStatus, Get, Param, Put, Delete, UseGuards, Request, Req } from '@nestjs/common';
 import { response, Response } from 'express';
 import { ApiTags, ApiResponse, ApiOperation, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { CrudService } from './crud.service';
@@ -14,6 +14,7 @@ import { Types,ObjectId } from 'mongoose';
 import { updateCommentDto } from './dto/update-comment.dto';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { request } from 'http';
 
 @ApiTags('api')
 @Controller('api')
@@ -160,7 +161,54 @@ async createAdmin(
     });
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('forgotPassword')
+  @ApiOperation({ summary: 'Checks if an email exists in the database' })
+  @ApiResponse({ status: 200, description: 'Este correo existe' })
+  @ApiResponse({ status: 400, description: 'No existe este correo' })
+  async forgotPassword(@Res() respuesta: Response, @Body() body: { email: string }) {
+    const emailValid = await this.crudService.forgotPassword(body.email);
+    if(!emailValid) {
+      return respuesta.status(400).json({
+        message: 'No existe este correo'
+      })
+    }
+
+    return respuesta.status(HttpStatus.OK).json({
+      message: 'Este correo existe'
+    })
+  }
   
+  @UseGuards(JwtAuthGuard)
+  @Post('validSecurityQuestion')
+  @ApiOperation({ summary: 'Validates user answers to security questions' })
+  @ApiResponse({ status: 200, description: 'Las preguntas y respuestas han coincidido' })
+  @ApiResponse({ status: 400, description: 'Las respuestas son incorrectas' })
+  async validQuestion(@Res() respuesta: Response, @Request() req,  @Body() body: { preguntasSeguridad: { pregunta: string, respuesta: string }[]}) {
+    const isValidQuestion = await this.crudService.validSecurityQuestion(req.user.userId, body.preguntasSeguridad);
+    if(!isValidQuestion) {
+      return respuesta.status(400).json({
+        message: 'Las respuestas son incorrectas'
+      })
+    }
+
+    return respuesta.status(HttpStatus.OK).json({
+      message: 'Las preguntas y respuestas han coincidido',
+      isValidQuestion
+    })
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('changePassword')
+  @ApiOperation({ summary: 'Change user password using bcrypt' })
+  @ApiResponse({ status: 200, description: 'Se ha actualizado la contraseña correctamente' })
+  async changePassword(@Res() respuesta: Response, @Body() body: { password: string }, @Request() req) {
+    const user = await this.crudService.changePassword(req.user.userId, body.password);
+    return respuesta.status(HttpStatus.OK).json({
+      message: 'Se ha actualizado la contrasena correctamente'
+    })
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('addFavoriteRestaurant')
   @ApiOperation({ summary: 'Add a restaurant to user favorites' })
