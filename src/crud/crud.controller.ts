@@ -607,7 +607,7 @@ async createAdmin(
   }
   
   @UseGuards(JwtAuthGuard)
-  @Get('getNearbyRestaurants/:latitud/:longitud/:anguloCamara/:distanciaRequerida/:userId')
+  @Get('getNearbyRestaurants/:latitud/:longitud/:anguloCamara/:distanciaRequerida')
   @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle and a specific distance' })
     @ApiBody({ 
     schema: {
