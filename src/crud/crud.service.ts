@@ -282,30 +282,28 @@ export class CrudService {
     return await restaurant.save();
   }
 
-  async updateComment(idRestaurant: string, idComment: string, data: any, userId: string):Promise<any> {
-    try {
-      const { comment, calificacion } = data;
-      const restaurant = await this.restaurantModel.findById(idRestaurant);
-     // console.log(restaurant)
-      const commentToUpdate = restaurant.reviews.find((c) => c._id.toString() == idComment);
-      //console.log(commentToUpdate)
-      if (!commentToUpdate || commentToUpdate.idUser !== userId) {
-        return null;
-      }
-      
-      if (comment !== undefined) {
-        commentToUpdate.comment = comment;
-      }
-  
-      if (calificacion !== undefined) {
-        commentToUpdate.calification = calificacion;
-      }
-      const fechaUTC:Date = new Date();
-      const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
-      commentToUpdate.date = fechaGMT4;
-      await restaurant.save();
-    return restaurant;
-    } catch (error) { console.error(error); }
+  async updateComment(idRestaurant: string, idComment: string, data: any):Promise<any> {
+    const restaurant = await this.restaurantModel.findById(idRestaurant);
+    const { comment, calification } = data;
+
+    const commentToUpdate = restaurant.reviews.find((comentario) => comentario.idUser == idComment);
+    if(!commentToUpdate){
+      return null;
+    }
+
+    if(comment != undefined) {
+      commentToUpdate.comment = comment;
+    }
+
+    if(calification != undefined) {
+      commentToUpdate.calification = calification;
+    }
+
+    const fechaUTC:Date = new Date();
+    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+    commentToUpdate.date = fechaGMT4;
+    
+    return await restaurant.save();
   }
   
   

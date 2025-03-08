@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { preguntasObject } from '../interfaces/user.interface';
 
 export class CreateUserDTO {
   @ApiProperty({ description: 'User name' })
@@ -24,4 +25,7 @@ export class CreateUserDTO {
 
   @ApiProperty({ description: 'User type' })
   typo: string;
+
+  @ApiProperty({ description: 'User questions' })
+  preguntasDeSeguridad: preguntasObject[];
 }
