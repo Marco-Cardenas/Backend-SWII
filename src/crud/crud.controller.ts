@@ -355,12 +355,12 @@ async createAdmin(
     await this.crudService.updateUserHistorial(req.user.userId, restaurantID);
 
     //se verifica si el restaurante fue dado like por la persona
-    const userRestaurantLiked = await this.crudService.isRestaurantLiked(req.user.userId, restaurantID);
+    const liked = await this.crudService.isRestaurantLiked(req.user.userId, restaurantID);
   
     return respuesta.status(HttpStatus.OK).json({
       message: 'Restaurante Encontrado',
       restaurantFound,
-      userRestaurantLiked
+      liked
     });
   }
 
