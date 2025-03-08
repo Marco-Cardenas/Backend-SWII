@@ -606,6 +606,7 @@ async createAdmin(
     return resp.status(HttpStatus.OK).json(result);
   }
   
+  @UseGuards(JwtAuthGuard)
   @Get('getNearbyRestaurants/:latitud/:longitud/:anguloCamara/:distanciaRequerida/:userId')
   @ApiOperation({ summary: 'Get nearby restaurants within a scanning angle and a specific distance' })
     @ApiBody({ 
@@ -629,11 +630,11 @@ async createAdmin(
     @Param('longitud') longitud: number, 
     @Param('anguloCamara') anguloCamara: number,
     @Param('distanciaRequerida') distanciaRequerida: number,
-    @Param('userId') userId: string,
+    @Request() req,
     @Body() foto: string
   ) {
     const escaneosNear = await this.crudService.getNearbyRestaurants(
-      latitud, longitud,anguloCamara,distanciaRequerida, userId, foto
+      latitud, longitud,anguloCamara,distanciaRequerida, req.user.userId, foto
     );
     return respuesta.status(200).json({
       message: 'Restaurantes cercanos dentro de la distancia',
