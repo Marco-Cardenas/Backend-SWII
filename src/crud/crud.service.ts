@@ -117,6 +117,7 @@ export class CrudService {
     const newUser = new this.userModel({
       ...userDTO,
       password: hashedPassword,
+      typo: 'user',
     });
     return await newUser.save();
   }
