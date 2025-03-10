@@ -371,7 +371,8 @@ export class CrudService {
     const { comment, calification } = data;
 
     const commentToUpdate = restaurant.reviews.find((comentario) => comentario.idUser == idComment);
-    if(!commentToUpdate){
+    //verifica que el id del comentario sea igual al del usuario
+    if(!commentToUpdate || commentToUpdate.idUser !== idComment){
       return null;
     }
 
@@ -395,7 +396,16 @@ export class CrudService {
     return comentarioActualizado;
   }
   
-  
+  async deleteCommentById(idRestaurant: string, idComment: string): Promise<any> {
+    const commentDeleted = await this.restaurantModel.findByIdAndUpdate(
+      idRestaurant,
+      {
+        $pull: {reviews: { idUser: idComment }},
+      },
+      { new: true }
+    )
+    return commentDeleted;
+  }
 
   //Servicios de Denuncias
   async createDenuncia(denunciaDTO: CreateDenunciaDTO): Promise<Denuncia> {

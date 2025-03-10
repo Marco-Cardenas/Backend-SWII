@@ -141,6 +141,12 @@ async createAdmin(
   @ApiResponse({ status: 404, description: 'User not found.' })
   async getUser(@Res() resp, @Param('id') userID: string) {
     const userFound = await this.crudService.getUser(userID);
+    if(!userFound) {
+      return resp.status(HttpStatus.NOT_FOUND).json({
+        message: "User not found."
+      }) 
+    }
+
     return resp.status(HttpStatus.OK).json({
       message: 'Usuario Encontrado',
       userFound: userFound
@@ -779,6 +785,56 @@ async createAdmin(
       message: "Mensaje actualizado",
       updatedComment
     });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ 
+    summary: 'Delete a comment corresponding to a restaurant',
+    description: `
+      Deletes a comment based on the restaurant that was made and the id of the comment.
+      @Param idComent[string]. The id of the user who made the offending comment.
+      @Param idRestaurant[string]. The id of the Restaurant where the comment was made.
+    `
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "El comentario ha sido eliminado",
+    schema: {
+      example: {
+        message: "El comentario ha sido eliminado",
+        comment: { }
+      }
+    }
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "No se ha encontrado el comentario",
+    schema: {
+      example: {
+        message: "No se ha encontrado el comentario",
+        comment: "null"
+      }
+    }
+  })
+  @Delete('deleteComment/:idRestaurant/:idComment')
+  async deleteComment(
+    @Res() respuesta: Response,
+    @Param('idRestaurant') idRestaurant: string,
+    @Param('idComment') idComment: string
+  ) {
+    const commentDeleted = await this.crudService.deleteCommentById(idRestaurant, idComment);
+
+    if(!commentDeleted) {
+      return response.status(HttpStatus.NOT_FOUND).json({
+        message: "No se ha encontrado el comentario",
+        commentDeleted
+      })
+    }
+
+    return respuesta.status(HttpStatus.OK).json({
+      message: "El comentario ha sido eliminado",
+      commentDeleted
+    })
   }
 
   //!Denuncias
