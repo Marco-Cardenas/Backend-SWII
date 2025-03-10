@@ -193,10 +193,14 @@ export class CrudService {
   }
 
   async updateUser(userID: string, userData: any): Promise<User> {
-    //el valor {new:true} se usa para retornar el usuario despues de actualizarlo
-    const userUpdated = await this.userModel.findByIdAndUpdate(userID, userData, {new:true});
+    if (userData.password !== undefined) {
+      const salt = await bcrypt.genSalt(10)
+      userData.password = await bcrypt.hash(userData.password, salt); 
+    }
+    const userUpdated = await this.userModel.findByIdAndUpdate(userID, userData, { new: true });
     return userUpdated;
   }
+
 
   async deleteUser(userID: string): Promise<User> {
     //el valor {new:false} se usa para retornar el usuario antes de ser borrado
