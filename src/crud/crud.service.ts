@@ -364,7 +364,8 @@ export class CrudService {
     const { comment, calification } = data;
 
     const commentToUpdate = restaurant.reviews.find((comentario) => comentario.idUser == idComment);
-    if(!commentToUpdate){
+    //verifica que el id del comentario sea igual al del usuario
+    if(!commentToUpdate || commentToUpdate.idUser !== idComment){
       return null;
     }
 
