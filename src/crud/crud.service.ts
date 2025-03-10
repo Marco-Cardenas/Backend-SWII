@@ -401,16 +401,13 @@ export class CrudService {
   }
   
   async deleteCommentById(idRestaurant: string, idComment: string): Promise<any> {
-    const restaurant = this.restaurantModel.findById(idRestaurant);
+    const restaurant = await this.restaurantModel.findById(idRestaurant);
     if(!restaurant) {
       return null;
     }
 
-    const review = (await restaurant).reviews.some(review => {
-      review.idUser === idComment
-    })
-
-    if(!review) {
+    const reviewExists = restaurant.reviews.some(review => review.idUser === idComment);
+    if(!reviewExists) {
       return null;
     }
 
