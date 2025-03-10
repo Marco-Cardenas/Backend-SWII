@@ -461,4 +461,20 @@ export class CrudService {
     const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, {new:true});
     return denunciaProcesada;
   }
+
+  // ELIMINAR DATOS DE LA BD
+
+  async eliminarBaseDatosUser() {
+    await this.userModel.deleteMany( { } );
+  }
+
+  async eliminarBaseDatosRestaurant() {
+    await this.restaurantModel.deleteMany( { } );
+  }
+  async eliminarBaseDatosDenuncia() {
+    await this.denunciaModel.deleteMany( { } );
+  }  
+  async eliminarBaseDatosEscaneo() {
+    await this.escaneoModel.deleteMany( { } );
+  }
 }

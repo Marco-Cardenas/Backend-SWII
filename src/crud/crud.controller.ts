@@ -960,4 +960,24 @@ async createAdmin(
       denunciaDelete: denunciaDeleted
     })
   }
+
+  // ELIMINAR DATOS DE LA BASE DE DATOS
+  @Get('eliminarBaseDatosUser')
+  async eliminarBaseDatosUser() {
+    await this.crudService.eliminarBaseDatosUser();
+  }
+
+  @Get('eliminarBaseDatosRestaurant')
+  async eliminarBaseDatosRestaurant() {
+    await this.crudService.eliminarBaseDatosRestaurant();
+  }
+
+  @Get('eliminarBaseDatosDenuncia')
+  async eliminarBaseDatosDenuncia() {
+    await this.crudService.eliminarBaseDatosDenuncia()
+  }  
+  @Get('eliminarBaseDatosEscaneo')
+  async eliminarBaseDatosEscaneo() {
+    await this.crudService.eliminarBaseDatosEscaneo()
+  }
 }
