@@ -15,4 +15,5 @@ export interface User extends Document {
   historial: string[];
   typo: string;
   preguntasDeSeguridad: preguntasObject[];
+  deshabilitarDatos: boolean;
 }

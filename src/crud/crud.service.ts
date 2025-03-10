@@ -133,7 +133,7 @@ export class CrudService {
     const email = userDTO.email;
     const emailTaken = await this.userModel.findOne({ email: email });
     if (emailTaken) {
-       return null
+      return null;
     }
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(userDTO.password, salt);
@@ -200,7 +200,8 @@ export class CrudService {
 
   async deleteUser(userID: string): Promise<User> {
     //el valor {new:false} se usa para retornar el usuario antes de ser borrado
-    const userDeleted = await this.userModel.findByIdAndDelete(userID, {new:false});
+    //const userDeleted = await this.userModel.findByIdAndDelete(userID, {new:false});
+    const userDeleted = await this.userModel.findByIdAndUpdate(userID, { deshabilitarDatos: true }, { new: true })
     return userDeleted;
   }
 
@@ -346,10 +347,16 @@ export class CrudService {
   async addComment(idRestaurant:string, comment:reviewObject, idUser:string):Promise<any>{
 
     const restaurant = await this.restaurantModel.findById(idRestaurant);
+    //Verificar existencia del restaurante
     if(!restaurant){
       return null;
     }
     const user = await this.userModel.findById(idUser);
+    //Verificar que el usuario no haya comentado aun
+    const usuarioYaComento = restaurant.reviews.some(comentarios => comentarios.idUser == idUser);
+    if(usuarioYaComento) {
+      return "Ya Comento";
+    }
     comment.idUser = idUser;
     comment.userName = user.name;
     const fechaUTC:Date = new Date();

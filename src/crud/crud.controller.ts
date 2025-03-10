@@ -111,7 +111,7 @@ async createAdmin(
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  //@ApiBearerAuth()
   @Get('getUsers')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'All users retrieved successfully.', schema: {
@@ -121,7 +121,7 @@ async createAdmin(
     },
   }})
   async getAllUsers(@Res() respuesta) {
-    const usersFound = await this.crudService.getAllUsers({});
+    const usersFound = await this.crudService.getAllUsers({ deshabilitarDatos: false });
     return respuesta.status(HttpStatus.OK).json({
       message: 'Todos los Usuarios',
       usersFound
@@ -330,7 +330,7 @@ async createAdmin(
     const userDeleted = await this.crudService.deleteUser(userID);
     return resp.status(HttpStatus.OK).json({
       message: 'Usuario Borrado',
-      userDeleted: userDeleted
+      userDeleted
     });
   }
 
@@ -382,6 +382,9 @@ async createAdmin(
     if(user.typo == 'admin') {
       restaurantsFound = await this.crudService.getAllRestaurants({});
     }
+    else if(user.typo == 'user') {
+      return respuesta.status(HttpStatus.OK).json({ message:"Los usuarios no poseen restaurantes" });
+    }
     else if(user.typo == 'propietario') {
       restaurantsFound = await this.crudService.getAllRestaurants({own:req.user.userId});
     }
@@ -390,6 +393,26 @@ async createAdmin(
       message: 'Todos los Restaurantes',
       restaurantsFound
     });
+  }
+
+  async ocultarReviews(reviews):Promise<reviewObject[]> {
+    return new Promise(
+      async(resolve) => {
+        if(reviews.length == 0) {
+          resolve([]);
+        }
+
+        const comentarios:reviewObject[] = [];
+        for(const comentario of reviews) {
+          const user = await this.crudService.getUser(comentario.idUser);
+          if(user.deshabilitarDatos == false) {
+            comentarios.push(comentario);
+          }
+        }
+
+        resolve(comentarios);
+      }
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -405,6 +428,9 @@ async createAdmin(
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
   async getRestaurant(@Res() respuesta, @Param('id') restaurantID: string, @Request() req) {
     const restaurantFound = await this.crudService.getRestaurant(restaurantID);
+
+    //No enviar a front comentarios de personas borradas
+    restaurantFound.reviews = await this.ocultarReviews(restaurantFound.reviews);
 
     //Se agrega el restaurante al historial del usuario
     await this.crudService.updateUserHistorial(req.user.userId, restaurantID);
@@ -725,6 +751,12 @@ async createAdmin(
         return resp.status(404).json({
           message:"Restaurant not found"
         })
+      }
+
+      if(restaurantComment == 'Ya Comento') {
+        resp.status(HttpStatus.OK).json({
+          message:"Ya haz realizado un comentario o calificacion. Por favor, actualizarla."
+        })  
       }
 
       resp.status(201).json({

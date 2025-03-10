@@ -28,4 +28,7 @@ export class CreateUserDTO {
 
   @ApiProperty({ description: 'User questions' })
   preguntasDeSeguridad: preguntasObject[];
+
+  @ApiProperty({ description: 'User state in BD ----- FRONT NO USA ESTA VARIABLE' })
+  deshabilitarDatos: boolean;
 }

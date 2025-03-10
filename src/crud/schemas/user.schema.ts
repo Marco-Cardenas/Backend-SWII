@@ -10,5 +10,6 @@ export const UserSchema = new Schema({
   favorites: { type: Array<String>, default: []},
   historial: { type: Array<String>, default: [] },
   typo: {type: String, default: 'user'},
-  preguntasDeSeguridad: {type:Array<preguntasObject>, default: []}
+  preguntasDeSeguridad: {type:Array<preguntasObject>, default: []},
+  deshabilitarDatos:{type:Boolean, default:false}
 });
