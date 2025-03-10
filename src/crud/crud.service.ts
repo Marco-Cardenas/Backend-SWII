@@ -388,7 +388,16 @@ export class CrudService {
     return comentarioActualizado;
   }
   
-  
+  async deleteCommentById(idRestaurant: string, idComment: string): Promise<any> {
+    const commentDeleted = await this.restaurantModel.findByIdAndUpdate(
+      idRestaurant,
+      {
+        $pull: {reviews: { idUser: idComment }},
+      },
+      { new: true }
+    )
+    return commentDeleted;
+  }
 
   //Servicios de Denuncias
   async createDenuncia(denunciaDTO: CreateDenunciaDTO): Promise<Denuncia> {
