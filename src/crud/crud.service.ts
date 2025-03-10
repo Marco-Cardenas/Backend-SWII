@@ -194,7 +194,7 @@ export class CrudService {
 
   async updateUser(userID: string, userData: any): Promise<User> {
     if (userData.password !== undefined) {
-      const salt = await bcrypt.genSalt(10)
+      const salt = await bcrypt.genSalt()
       userData.password = await bcrypt.hash(userData.password, salt); 
     }
     const userUpdated = await this.userModel.findByIdAndUpdate(userID, userData, { new: true });
