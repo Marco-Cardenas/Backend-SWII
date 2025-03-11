@@ -1140,21 +1140,21 @@ async createAdmin(
   }
 
   // ELIMINAR DATOS DE LA BASE DE DATOS
-  @Get('eliminarBaseDatosUser')
+//  @Get('eliminarBaseDatosUser')
   async eliminarBaseDatosUser() {
     await this.crudService.eliminarBaseDatosUser();
   }
 
-  @Get('eliminarBaseDatosRestaurant')
+//  @Get('eliminarBaseDatosRestaurant')
   async eliminarBaseDatosRestaurant() {
     await this.crudService.eliminarBaseDatosRestaurant();
   }
 
-  @Get('eliminarBaseDatosDenuncia')
+//  @Get('eliminarBaseDatosDenuncia')
   async eliminarBaseDatosDenuncia() {
     await this.crudService.eliminarBaseDatosDenuncia()
   }  
-  @Get('eliminarBaseDatosEscaneo')
+//  @Get('eliminarBaseDatosEscaneo')
   async eliminarBaseDatosEscaneo() {
     await this.crudService.eliminarBaseDatosEscaneo()
   }
