@@ -486,12 +486,16 @@ export class CrudService {
 
   async procesarDenuncia(denunciaID: string, denunciaData: any, adminID: string) {
     //el valor {new:true} se usa para retornar la denuncia despues de actualizarla
+    const fechaUTC:Date = new Date();
+    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
     const denuncia = {
       ...denunciaData,
-      "idAdministrador":adminID
+      "idAdministrador":adminID,
+      "fecha":fechaGMT4
     }
 
     if(denuncia.tipo == 'OMITIDO') {
+      denuncia.tiempoBaneo = 0;
       const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, {new:true});
       if(!denunciaProcesada) {
         return null;
@@ -511,8 +515,9 @@ export class CrudService {
           return null;
         }
 
+        const tiempoBaneado: Date = new Date(fechaUTC.getTime() - (4*60*60*1000) + (denuncia.tiempoBaneo * 1000));
         //Ponemos el tiempo de Baneo actual al restaurante
-        await this.restaurantModel.findByIdAndUpdate(denunciado.idDenunciado, { tiempoBaneo: denunciaData.tiempoBaneo });
+        await this.restaurantModel.findByIdAndUpdate(denunciado.idDenunciado, { tiempoBaneo: tiempoBaneado });
 
         //Actualizamos la denuncia Procesada
         const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, { new: true });
@@ -525,9 +530,10 @@ export class CrudService {
         if(!usuario) {
           return null;
         }
-
+        
+        const tiempoBaneado: Date = new Date(fechaUTC.getTime() - (4*60*60*1000) + (denuncia.tiempoBaneo * 1000));
         //Ponemos el tiempo de Baneo al usuario
-        await this.userModel.findByIdAndUpdate(denunciado.idComentario, { tiempoBaneo: denunciaData.tiempoBaneo });
+        await this.userModel.findByIdAndUpdate(denunciado.idComentario, { tiempoBaneo: tiempoBaneado });
 
         //Actualizamos la denuncia Procesada
         const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, { new: true });
@@ -537,6 +543,41 @@ export class CrudService {
 
     }
     return null;
+  }
+
+  async verifyBan(id: string, typo: string):Promise<boolean> {
+
+    if(typo == 'user') {
+      //Verificar Baneo de un usuario
+      const user = await this.userModel.findById(id);
+      const fechaUTC:Date = new Date();
+      const fechaActual:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000); //Tomamos la fecha actual
+
+      const fechaMaximaDelBaneo: Date = new Date(user.tiempoBaneo); //La fecha maxima en que el baneo esta activo
+      
+      if(fechaMaximaDelBaneo > fechaActual) {
+        return true;
+      }
+      else {
+        await this.userModel.findByIdAndUpdate(id, {tiempoBaneo: 0}, {new: true}); // le eliminamos el tiempo de baneo al usuario
+        return false;
+      }
+    }
+    else if(typo == 'restaurant') {
+      const restaurant = await this.restaurantModel.findById(id);
+      const fechaUTC:Date = new Date();
+      const fechaActual:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000); //Tomamos la fecha actual
+
+      const fechaMaximaDelBaneo: Date = new Date(restaurant.tiempoBaneo); //La fecha maxima en que el baneo esta activo
+      
+      if(fechaMaximaDelBaneo > fechaActual) {
+        return true;
+      }
+      else {
+        await this.restaurantModel.findByIdAndUpdate(id, {tiempoBaneo: 0}, {new:true}); // le eliminamos el tiempo de baneo al restaurante
+        return false;
+      }
+    }
   }
 
   // ELIMINAR DATOS DE LA BD

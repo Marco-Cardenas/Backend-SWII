@@ -37,5 +37,5 @@ export class CreateRestaurantDTO {
   fotos: string[];
 
   @ApiProperty({ description: 'Tiempo de Baneo del restaurante' })
-  tiempoBaneo: number;
+  tiempoBaneo: Date;
 }

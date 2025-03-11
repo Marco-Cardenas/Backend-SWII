@@ -26,13 +26,6 @@ export class CrudController {
     private readonly authService: AuthService
   ){}
 
-  //true: BANEADO  ----------------  false: NO BANEADO
-  async checkBan(id: string):Promise<Boolean> {
-    const user = await this.crudService.getUser(id);
-
-    
-    return (user.tiempoBaneo > 0); 
-  }
   @Post('createUser')
   @ApiOperation({ summary: 'Create a new user' })
   @ApiBody({ type: CreateUserSwaggerDTO })
@@ -112,7 +105,8 @@ async createAdmin(
     }
 
     const token = await this.authService.loginFromMongoose(user);
-    if(await this.checkBan(token.id) == true) {
+    const isBan: boolean = await this.crudService.verifyBan(token.id, 'user');
+    if(isBan == true) {
       return resp.status(404).json({
         message: 'Usuario Temporalmente Baneado'
       });  
@@ -160,9 +154,16 @@ async createAdmin(
       }) 
     }
 
+    const isBan = await this.crudService.verifyBan(userID, 'user');
+    if(isBan == true) {
+      return resp.status(404).json({
+        message: 'Usuario Temporalmente Baneado'
+      });
+    }
+
     return resp.status(HttpStatus.OK).json({
       message: 'Usuario Encontrado',
-      userFound: userFound
+      userFound
     });
   }
 
@@ -448,6 +449,13 @@ async createAdmin(
   async getRestaurant(@Res() respuesta, @Param('id') restaurantID: string, @Request() req) {
     const restaurantFound = await this.crudService.getRestaurant(restaurantID);
 
+    //verificar si el restaurante esta baneado
+    const isBan = await this.crudService.verifyBan(restaurantID, 'restaurant');
+    if(isBan == true) {
+      return respuesta.status(404).json({
+        message: 'Restaurante Temporalmente Baneado'
+      });
+    }
     //No enviar a front comentarios de personas borradas
     restaurantFound.reviews = await this.ocultarReviews(restaurantFound.reviews);
 
@@ -1047,7 +1055,7 @@ async createAdmin(
       });
     }
     else {
-      return respuesta.status(HttpStatus.OK).json({
+      return respuesta.status(404).json({
         message: "Acceso denegado: Solo para administradores del sistema."
       });
     }

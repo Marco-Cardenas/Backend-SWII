@@ -12,5 +12,5 @@ export const UserSchema = new Schema({
   typo: {type: String, default: 'user'},
   preguntasDeSeguridad: {type:Array<preguntasObject>, default: []},
   deshabilitarDatos:{type:Boolean, default:false},
-  tiempoBaneo: {type: Number, default:0 }
+  tiempoBaneo: {type: Date, default:0 }
 });
