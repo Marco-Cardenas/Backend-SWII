@@ -16,4 +16,5 @@ export interface User extends Document {
   typo: string;
   preguntasDeSeguridad: preguntasObject[];
   deshabilitarDatos: boolean;
+  tiempoBaneo: number;
 }

@@ -11,5 +11,6 @@ export const UserSchema = new Schema({
   historial: { type: Array<String>, default: [] },
   typo: {type: String, default: 'user'},
   preguntasDeSeguridad: {type:Array<preguntasObject>, default: []},
-  deshabilitarDatos:{type:Boolean, default:false}
+  deshabilitarDatos:{type:Boolean, default:false},
+  tiempoBaneo: {type: Number, default:0 }
 });
