@@ -483,14 +483,59 @@ export class CrudService {
     return await restauranteDenunciado.save();
   }
 
-  async procesarDenuncia(denunciaID: string, denunciaData: any, adminID: string): Promise<Denuncia> {
+  async procesarDenuncia(denunciaID: string, denunciaData: any, adminID: string) {
     //el valor {new:true} se usa para retornar la denuncia despues de actualizarla
     const denuncia = {
       ...denunciaData,
       "idAdministrador":adminID
     }
-    const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, {new:true});
-    return denunciaProcesada;
+
+    if(denuncia.tipo == 'OMITIDO') {
+      const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, {new:true});
+      if(!denunciaProcesada) {
+        return null;
+      }
+      return denunciaProcesada;  
+    }
+    else if(denuncia.tipo == 'BANEADO') {
+      const denunciado = await this.denunciaModel.findById(denunciaID); //Buscamos la denuncia
+      if(!denunciado) {
+        return null;
+      }
+
+      //Se denuncio fue un restaurante
+      if(denunciado.idComentario == '') {
+        const restaurante = await this.restaurantModel.findById(denunciado.idDenunciado);
+        if(!restaurante) {
+          return null;
+        }
+
+        //Ponemos el tiempo de Baneo actual al restaurante
+        await this.restaurantModel.findByIdAndUpdate(denunciado.idDenunciado, { tiempoBaneo: denunciaData.tiempoBaneo });
+
+        //Actualizamos la denuncia Procesada
+        const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, { new: true });
+
+        return denunciaProcesada;
+      }
+      else {
+        //Se denuncio un comentario
+        const usuario = await this.userModel.findById(denunciado.idComentario);
+        if(!usuario) {
+          return null;
+        }
+
+        //Ponemos el tiempo de Baneo al usuario
+        await this.userModel.findByIdAndUpdate(denunciado.idComentario, { tiempoBaneo: denunciaData.tiempoBaneo });
+
+        //Actualizamos la denuncia Procesada
+        const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, { new: true });
+
+        return denunciaProcesada;
+      }
+
+    }
+    return null;
   }
 
   // ELIMINAR DATOS DE LA BD

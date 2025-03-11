@@ -26,6 +26,12 @@ export class CrudController {
     private readonly authService: AuthService
   ){}
 
+  //true: BANEADO  ----------------  false: NO BANEADO
+  async checkBan(id: string) {
+    const user = await this.crudService.getUser(id);
+
+    return (user.tiempoBaneo > 0); 
+  }
   @Post('createUser')
   @ApiOperation({ summary: 'Create a new user' })
   @ApiBody({ type: CreateUserSwaggerDTO })
@@ -96,14 +102,21 @@ async createAdmin(
       message: 'Credenciales inválidas',
     },
   }})
-  async login(@Res() resp, @Body() loginDTO: loginDto) {
+  async login(@Res() resp, @Body() loginDTO: loginDto, @Request() req) {
     const user = await this.authService.validateUser(loginDTO.email, loginDTO.password);
     if (!user) {
       return resp.status(HttpStatus.UNAUTHORIZED).json({
         message: 'Credenciales inválidas',
       });
     }
+
     const token = await this.authService.loginFromMongoose(user);
+    if(this.checkBan(token.id)) {
+      return resp.status(404).json({
+        message: 'Usuario Temporalmente Baneado'
+      });  
+    }
+
     return resp.status(HttpStatus.OK).json({
       message: 'Inicio de sesión exitoso',
       token: token.access_token
@@ -111,7 +124,6 @@ async createAdmin(
   }
 
   @UseGuards(JwtAuthGuard)
-  //@ApiBearerAuth()
   @Get('getUsers')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'All users retrieved successfully.', schema: {
@@ -1022,6 +1034,12 @@ async createAdmin(
     const user = await this.crudService.getUser(req.user.userId);
     if(user.typo == 'admin') {
       const denunciaProcesada = await this.crudService.procesarDenuncia(idDenuncia, estadoDenuncia, req.user.userId);
+      if(!denunciaProcesada) {
+        return respuesta.status(404).json({
+          message: "Denuncia No Procesada"
+        });  
+      }
+
       return respuesta.status(HttpStatus.OK).json({
         message: "Denuncia Procesada Con Exito",
         denunciaProcesada
