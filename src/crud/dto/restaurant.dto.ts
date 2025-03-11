@@ -6,6 +6,9 @@ export class CreateRestaurantDTO {
   @ApiProperty({ description: 'Restaurant name' })
   name: string;
 
+  @ApiProperty({ description: 'Restaurant rif' })
+  rif: string;
+
   @ApiProperty({ description: 'Restaurant owner' })
   own: string;
 
@@ -35,6 +38,9 @@ export class CreateRestaurantDTO {
 
   @ApiProperty({ description: 'Restaurant pictures' })
   fotos: string[];
+
+  @ApiProperty({ description: 'Restaurant deshabilitar Datos' })
+  deshabilitarDatos: string;
 
   @ApiProperty({ description: 'Tiempo de Baneo del restaurante' })
   tiempoBaneo: Date;

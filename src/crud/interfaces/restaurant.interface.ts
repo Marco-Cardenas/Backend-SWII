@@ -11,6 +11,7 @@ export interface reviewObject {
 
 export interface Restaurant extends Document {
   name: string;
+  rif: string;
   own: string;
   fotoPerfil: string;
   description: string;
@@ -21,5 +22,6 @@ export interface Restaurant extends Document {
   viewed: number;
   reviews: reviewObject[];
   fotos: string[];
+  deshabilitarDatos: boolean;
   tiempoBaneo: Date;
 }
