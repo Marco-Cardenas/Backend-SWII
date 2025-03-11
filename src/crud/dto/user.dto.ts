@@ -31,4 +31,7 @@ export class CreateUserDTO {
 
   @ApiProperty({ description: 'User state in BD ----- FRONT NO USA ESTA VARIABLE' })
   deshabilitarDatos: boolean;
+
+  @ApiProperty({ description: 'Tiempo que estara baneado el usuario' })
+  tiempoBaneo: number;
 }

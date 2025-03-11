@@ -6,7 +6,6 @@ export interface reviewObject {
   comment: string;
   calification: number;
   date:Date;
-  responses: reviewObject[];
 }
 
 
@@ -22,4 +21,5 @@ export interface Restaurant extends Document {
   viewed: number;
   reviews: reviewObject[];
   fotos: string[];
+  tiempoBaneo: number;
 }

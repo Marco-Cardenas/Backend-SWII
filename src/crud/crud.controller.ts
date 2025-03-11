@@ -855,19 +855,38 @@ async createAdmin(
       },
     },
   })
-  async getDenuncias(@Res() respuesta: Response) {
-    const denuncias = await this.crudService.getAllDenuncias({});
-    return respuesta.status(HttpStatus.OK).json({
-      message: "Todas las denuncias encontradas",
-      denuncias
-    });
+  async getDenuncias(@Res() respuesta: Response, @Request() req) {
+    const user = await this.crudService.getUser(req.user.userId);
+    if(user.typo == 'admin') {
+      const denuncias = await this.crudService.getAllDenuncias({});
+      return respuesta.status(HttpStatus.OK).json({
+        message: "Todas las denuncias encontradas",
+        denuncias
+      }); 
+    } 
+    else {
+      return respuesta.status(404).json({
+        message: "Acceso denegado: Solo para administradores del sistema."
+      });
+    }
   }
-
+  
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
-    summary: 'Collect the Denuncia that match the established filter.',
+    summary: 'Filtrar las denuncias',
     description: `
-      Performs a query to the Denuncia database to obtain only those Denuncia that match the requested Denuncia characteristic or attributes. In other words, you decide which characteristic you want to filter by.
+      Aqui puedes filtrar las denuncias por algunas de las propiedades presente en el siguiente esquema 
+      { 
+        razon: string;
+        observacion: string;
+        idComentario: string;
+        idDenunciado: string;
+        idDenunciante: string;
+        idAdministrador: string;
+        tipo: string;
+        tiempoBaneo: number;
+      }
+       NOTA: un ejemplo puede ser que si Front-end manda un JSON asi: { "razon":"LENGUAJE OFENSIVO" } esto devolvera todas las denuncias que tengan esa misma "razon"
       `
   })
   @ApiResponse({
@@ -890,18 +909,26 @@ async createAdmin(
     }
   })
   @Post('filtrarDenuncias')
-  async filtrarDenuncias(@Res() respuesta: Response, @Body() opcionesFiltrado: any) {
-    const denunciasFiltradas = await this.crudService.getAllDenuncias(opcionesFiltrado);
-    if (denunciasFiltradas.length === 0) {
-      return respuesta.status(400).json({
-        message: 'Denuncies not found'
+  async filtrarDenuncias(@Res() respuesta: Response, @Body() opcionesFiltrado: any, @Request() req) {
+    const user = await this.crudService.getUser(req.user.userId);
+    if(user.typo == 'admin') {
+      const denunciasFiltradas = await this.crudService.getAllDenuncias(opcionesFiltrado);
+      if (denunciasFiltradas.length === 0) {
+        return respuesta.status(404).json({
+          message: 'No hay coincidencias'
+        });
+      }
+      
+      return respuesta.status(HttpStatus.OK).json({
+        message: "Denuncias encontradas con el filtro",
+        denunciasFiltradas
       });
     }
-    
-    return respuesta.status(HttpStatus.OK).json({
-      message: "Denuncias encontradas con el filtro",
-      denunciasFiltradas
-    });
+    else {
+      return respuesta.status(404).json({
+        message: "Acceso denegado: Solo para administradores del sistema."
+      });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -936,26 +963,46 @@ async createAdmin(
     description: 'No se ha encontrado coincidencias'
   })
   @Get('getDenuncia/:id')
-  async getDenuncia(@Res() respuesta: Response, @Param('id') idDenuncia: string) {
-    const denunciaEncontrada = await this.crudService.getDenuncia(idDenuncia);
-    return respuesta.status(HttpStatus.OK).json({
-      message: "Denuncia encontrada",
-      denunciaEncontrada
-    });
+  async getDenuncia(@Res() respuesta: Response, @Param('id') idDenuncia: string, @Request() req) {
+    const user = await this.crudService.getUser(req.user.userId);
+    if(user.typo == 'admin') {
+      const denunciaEncontrada = await this.crudService.getDenuncia(idDenuncia);
+      if(!denunciaEncontrada) {
+        return respuesta.status(HttpStatus.OK).json({
+          message: "Denuncia no encontrada"
+        });
+      }
+
+      return respuesta.status(HttpStatus.OK).json({
+        message: "Denuncia encontrada",
+        denunciaEncontrada
+      });
+    }
+    else {
+      return respuesta.status(HttpStatus.OK).json({
+        message: "Acceso denegado: Solo para administradores del sistema."
+      });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
-    summary: 'Send to process a Denuncia',
+    summary: 'Aqui se procesaran las denuncias',
     description: `
-      Send the denuncia to the Denuncia database so that an administrator can process it (Adds the administrator ID to the idAdministrador attribute).
-      - id. This is the ID of the Denuncia to be processed.
-      - The identification of the administrator processing the Denuncia is sent through the body.
+      Se debe enviar desde el front-end un JSON como el siguiente:
+      {
+        "tipo": "El valor pueder ser OMITIDO o BANEADO sin espacios y solo en mayusculas",
+        "tiempoBaneo": debe ser como numero (NO ENVIAR COMO STRING) este representara el tiempo de Baneo en segundos
+      }
+
+      NOTA:
+      si es "tipo":"OMITIDO" NO envien el "tiempoBaneo" (la propiedad no debe ni aparecer en el JSON a enviar)
+      si es "tipo":"BANEADO" SI envien el "tiempoBaneo":numero
     `
   })
   @ApiResponse({
     status: 200,
-    description: 'Denuncia Procesada',
+    description: 'Procesado de denuncia',
     schema: {
       example: {
         razon: 'Comentario Despectivo',
@@ -972,11 +1019,19 @@ async createAdmin(
   })
   @Post('procesarDenuncia/:id')
   async procesarDenuncia(@Res() respuesta, @Param('id') idDenuncia: string, @Body() estadoDenuncia: any, @Request() req) {
-    const denunciaProcesada = await this.crudService.procesarDenuncia(idDenuncia, estadoDenuncia, req.user.userId);
-    return respuesta.status(HttpStatus.OK).json({
-      message: "Denuncia Procesada",
-      denunciaProcesada
-    });
+    const user = await this.crudService.getUser(req.user.userId);
+    if(user.typo == 'admin') {
+      const denunciaProcesada = await this.crudService.procesarDenuncia(idDenuncia, estadoDenuncia, req.user.userId);
+      return respuesta.status(HttpStatus.OK).json({
+        message: "Denuncia Procesada Con Exito",
+        denunciaProcesada
+      });
+    }
+    else {
+      return respuesta.status(HttpStatus.OK).json({
+        message: "Acceso denegado: Solo para administradores del sistema."
+      });
+    }
   }
 
   //Tipo de estado del comentario: EN PROCESO, BANEADO, OMITIDO
@@ -1041,12 +1096,20 @@ async createAdmin(
       }
     }
   })
-  async eliminarDenuncia(@Res() respuesta: Response, @Param('denunciaID') denunciaID: string) {
-    const denunciaDeleted = await this.crudService.deleteDenuncia(denunciaID);
-    return respuesta.status(HttpStatus.OK).json({
-      message: 'Denunciada eliminada correctamente',
-      denunciaDelete: denunciaDeleted
-    })
+  async eliminarDenuncia(@Res() respuesta: Response, @Param('denunciaID') denunciaID: string, @Request() req) {
+    const user = await this.crudService.getUser(req.user.userId);
+    if(user.typo == 'admin') {
+      const denunciaDeleted = await this.crudService.deleteDenuncia(denunciaID);
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Denunciada eliminada correctamente',
+        denunciaDeleted
+      });
+    }
+    else {
+      return respuesta.status(HttpStatus.OK).json({
+        message: "Acceso denegado: Solo para administradores del sistema."
+      });
+    }
   }
 
   // ELIMINAR DATOS DE LA BASE DE DATOS

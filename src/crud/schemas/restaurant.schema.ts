@@ -13,5 +13,6 @@ export const RestaurantSchema = new Schema({
   longitude: { type: Number, default: 0 },
   viewed: { type: Number, default: 0 },
   reviews: { type: Array<reviewObject>, default: [] }, // Usa el subesquema
-  fotos: { type: Array<String>, default: []}
+  fotos: { type: Array<String>, default: []},
+  tiempoBaneo: {type: Number, default:0 }
 });
