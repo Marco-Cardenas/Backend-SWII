@@ -49,7 +49,7 @@ export class CrudService {
   ) {
     // Conversión de grados a radianes
     const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
-      
+
     // Radio de la tierra en kilómetros
     const earthRadius = 6371; 
 
@@ -78,6 +78,10 @@ export class CrudService {
 
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           const distance = earthRadius * c;
+
+          const restaurantData = restaurant.toObject();
+          delete restaurantData.fotos;
+
           /*
             let angulo = Math.atan2(restaurant.longitude - longitud, restaurant.latitude - latitud) * 180 / Math.PI;
             //Se ajusta el angulo para que este entre 0 y 360
@@ -91,7 +95,7 @@ export class CrudService {
             return diferencia <= 45 && distance <= parseFloat(distanciaRequerida);
           */
           // Retornamos el objeto del restaurante con la distancia calculada
-          return { ...restaurant.toObject(), distance };
+          return { ...restaurantData, distance };
         })
         .filter(restaurant => restaurant.distance <= distanceMeter); // Filtramos por la distancia requerida
 
@@ -110,8 +114,8 @@ export class CrudService {
       idUser: idUser,
       restaurantesCercanos: idRestaurants
     });
-    await this.createEscaneo(escaneos);
 
+    await this.createEscaneo(escaneos); 
     return escaneosNear;
 }
 
