@@ -27,9 +27,10 @@ export class CrudController {
   ){}
 
   //true: BANEADO  ----------------  false: NO BANEADO
-  async checkBan(id: string) {
+  async checkBan(id: string):Promise<Boolean> {
     const user = await this.crudService.getUser(id);
 
+    
     return (user.tiempoBaneo > 0); 
   }
   @Post('createUser')
@@ -111,7 +112,7 @@ async createAdmin(
     }
 
     const token = await this.authService.loginFromMongoose(user);
-    if(this.checkBan(token.id)) {
+    if(await this.checkBan(token.id) == true) {
       return resp.status(404).json({
         message: 'Usuario Temporalmente Baneado'
       });  
