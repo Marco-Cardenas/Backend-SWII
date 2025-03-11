@@ -99,8 +99,6 @@ export class CrudService {
         })
         .filter(restaurant => restaurant.distance <= distanceMeter); // Filtramos por la distancia requerida
 
-        console.log(escaneosNear)
-
     const idRestaurants = escaneosNear.map(escaneo => {
       return escaneo._id;
     })
