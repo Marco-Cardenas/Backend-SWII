@@ -47,61 +47,58 @@ export class CrudService {
     idUser: string,
     foto: string
   ) {
+    // Radio de la tierra en kilómetros
+    const earthRadius = 6371;
+
+    // Convertimos la distancia requerida de metros a kilómetros
+    const distanceKm = distanciaRequerida / 1000;
+
     // Conversión de grados a radianes
     const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
 
-    // Radio de la tierra en kilómetros
-    const earthRadius = 6371; 
+    const calculateDistance = (latitudUser: number, longitudUser: number, latitudeRestaurant: number, longitudeRestaurant): number => {
+      // Longitudes y latitudes en Radianes
+      const lat = convertRadians(latitudUser);
+      const lon = convertRadians(longitudUser);
+      const lat1Rad = convertRadians(latitudeRestaurant);
+      const lon1Rad = convertRadians(longitudeRestaurant);
+      
+      // Diferencia de latitud y longitud
+      const differenceLat = lat - lat1Rad;
+      const differenceLon = lon - lon1Rad;
 
-    // Convertimos la distancia requerida de metros a kilómetros
-    const distanceMeter = distanciaRequerida / 1000;
+      // Fórmula de Haversine
+      const a = Math.sin(differenceLat / 2) * Math.sin(differenceLat / 2) + 
+                Math.sin(differenceLon / 2) * Math.sin(differenceLon / 2) * 
+                Math.cos(lat) * Math.cos(lat1Rad);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = earthRadius * c;   
+
+      return distance 
+    };
 
     // Recopilamos todos los restaurantes
     const allRestaurants = await this.restaurantModel.find({});
 
-    // Seleccionamos los restaurantes que estén a una distancia menor o igual a la distancia requerida
-    const escaneosNear = allRestaurants.map(restaurant => {
-          // Latitud y longitud en radianes
-          const lat = convertRadians(latitud);
-          const lon = convertRadians(longitud);
-          const lat1Rad = convertRadians(restaurant.latitude);
-          const lon1Rad = convertRadians(restaurant.longitude);
-                
-          // Diferencia de latitud y longitud
-          const differenceLat = lat - lat1Rad;
-          const differenceLon = lon - lon1Rad;
+    const escaneosNear = [];
+    const idRestaurants = [];
+    
+    for(const restaurant of allRestaurants) {
+      const distance = calculateDistance(latitud, longitud, restaurant.latitude, restaurant.longitude);
+      
+      // Comprobamos que la distancia del restaurante sea menor o igual a la requerida
+      if(distance <= distanceKm) {
+        const restaurantData = { ...restaurant.toObject(), distance };
+        delete restaurantData.fotos;
 
-          // Fórmula de Haversine
-          const a = Math.sin(differenceLat / 2) * Math.sin(differenceLat / 2) + 
-                    Math.sin(differenceLon / 2) * Math.sin(differenceLon / 2) * 
-                    Math.cos(lat) * Math.cos(lat1Rad);
+        // Insertamos el restaurante cercano
+        escaneosNear.push(restaurant);
 
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          const distance = earthRadius * c;
-
-          const restaurantData = restaurant.toObject();
-          delete restaurantData.fotos;
-
-          /*
-            let angulo = Math.atan2(restaurant.longitude - longitud, restaurant.latitude - latitud) * 180 / Math.PI;
-            //Se ajusta el angulo para que este entre 0 y 360
-            angulo = (angulo + 360) % 360;
-            //Se calcula la diferencia entre el angulo de la camara y el angulo del escaneo
-            let diferencia = Math.abs(anguloCamara - angulo);
-            //Se ajusta la diferencia para que este entre 0 y 180
-            diferencia = (diferencia + 180) % 180;
-                
-            // Retorno si la diferencia es menor o igual a 45 grados y la distancia es menor o igual a la distancia dada
-            return diferencia <= 45 && distance <= parseFloat(distanciaRequerida);
-          */
-          // Retornamos el objeto del restaurante con la distancia calculada
-          return { ...restaurantData, distance };
-        })
-        .filter(restaurant => restaurant.distance <= distanceMeter); // Filtramos por la distancia requerida
-
-    const idRestaurants = escaneosNear.map(escaneo => {
-      return escaneo._id;
-    })
+        // Insertamos el id del restaurante cercano 
+        idRestaurants.push(restaurant._id);
+      }
+    }
 
     const fechaUTC:Date = new Date();
     const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
