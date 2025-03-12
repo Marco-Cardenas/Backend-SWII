@@ -44,9 +44,7 @@ export class CrudController {
   async createUser(@Res() resp, @Body() userDTO: CreateUserDTO) {
     const newUser = await this.crudService.createUser(userDTO);
     if (!newUser) {
-      return resp.status(HttpStatus.UNAUTHORIZED).json({
-        message:"Email duplicado"
-      });
+      return resp.status(HttpStatus.UNAUTHORIZED).json({ message: 'Email duplicado' });
     }
     const token = await this.authService.login(newUser);
     return resp.status(HttpStatus.OK).json({
@@ -73,13 +71,9 @@ async createAdmin(
 ) {
   const newAdmin = await this.crudService.createAdmin(adminDTO);
   if (!newAdmin) {
-    return resp.status(HttpStatus.UNAUTHORIZED).json({
-      message: "Email duplicado"
-    });
+    return resp.status(HttpStatus.UNAUTHORIZED).json({ message: 'Email duplicado' });
   }
-  return resp.status(HttpStatus.OK).json({
-    message: 'Administrador creado exitosamente',
-  });
+  return resp.status(HttpStatus.OK).json({ message: 'Administrador creado exitosamente' });
 }
 
   @Post('login')
@@ -126,16 +120,16 @@ async createAdmin(
   async getAllUsers(@Res() respuesta, @Request() req) {
     const user = await this.crudService.getUser(req.user.userId);
     if(!user) {
-      return respuesta.status(404).json({ message: 'Error: Usuario no registrado.' });
+      return respuesta.status(404).json({ message: 'Error: Usuario no registrado' });
     }
 
     if(user.typo != 'admin') {
-      return respuesta.status(404).json({ message: 'Acceso denegado: solo para administradores del sistema.' });
+      return respuesta.status(404).json({ message: 'Acceso denegado: solo para administradores del sistema' });
     }
 
     const usersFound = await this.crudService.getAllUsers({ deshabilitarDatos: false });
     if(!usersFound) {
-      return respuesta.status(404).json({ message: 'No se encontraron usuarios.' });
+      return respuesta.status(404).json({ message: 'No se encontraron usuarios' });
     }
 
     return respuesta.status(HttpStatus.OK).json({
@@ -158,12 +152,12 @@ async createAdmin(
   async getUser(@Res() respuesta, @Param('id') userID: string) {
     const userFound = await this.crudService.getUser(userID);
     if(!userFound) {
-      return respuesta.status(404).json({ message: 'Usuario no encontrado.' }); 
+      return respuesta.status(404).json({ message: 'Usuario no encontrado' }); 
     }
 
     const isBan = await this.crudService.verifyBan(userID, 'user');
     if(isBan == true) {
-      return respuesta.status(404).json({ message: 'Usuario Temporalmente Baneado.' });
+      return respuesta.status(404).json({ message: 'Usuario Temporalmente Baneado' });
     }
 
     return respuesta.status(HttpStatus.OK).json({
@@ -181,21 +175,21 @@ async createAdmin(
   async getUserByName(@Res() respuesta, @Body() userName: { name:string }, @Request() req) {
     const user = await this.crudService.getUser(req.user.userId);
     if(!user) {
-      return respuesta.status(404).json({ message: 'No se encontro un usuario con ese identificador.' });   
+      return respuesta.status(404).json({ message: 'No se encontro un usuario con ese identificador' });   
     }
 
     if(user.typo != 'admin') {
-      return respuesta.status(404).json({ message: 'Acceso denegado: solo para administradores del sistema.' });   
+      return respuesta.status(404).json({ message: 'Acceso denegado: solo para administradores del sistema' });   
     }
 
-    const userFound = await this.crudService.getUserByName(userName.name);
-    if(!userFound) {
-      return respuesta.status(404).json({ message: 'No se encontraron usuarios con ese nombre.' });   
+    const usersFound = await this.crudService.getUserByName(userName.name);
+    if(!usersFound) {
+      return respuesta.status(404).json({ message: 'No se encontraron usuarios con ese nombre' });   
     }
 
     return respuesta.status(HttpStatus.OK).json({
       message: 'Usuario Encontrado',
-      userFound
+      usersFound
     });
   }
 
@@ -206,11 +200,11 @@ async createAdmin(
   async forgotPassword(@Res() respuesta, @Body() body: { email: string }) {
     const emailValid = await this.crudService.forgotPassword(body.email);
     if(!emailValid) {
-      return respuesta.status(404).json({ message: 'No existe este correo.', isValidEmail:false });
+      return respuesta.status(404).json({ message: 'No existe este correo', isValidEmail:false });
     }
 
     const user = await this.crudService.getUserByEmail(body.email);
-    return respuesta.status(HttpStatus.OK).json({ message: 'Este correo existe.', isValidEmail:true, user });
+    return respuesta.status(HttpStatus.OK).json({ message: 'Este correo existe', isValidEmail:true, user });
   }
   
   @Post('validSecurityQuestion/:userID')
@@ -218,16 +212,21 @@ async createAdmin(
   @ApiResponse({ status: 200, description: 'Las preguntas y respuestas han coincidido' })
   @ApiResponse({ status: 400, description: 'Las respuestas son incorrectas' })
   async validQuestion(@Res() respuesta, @Param('userID') userID: string, @Body() body: { preguntasDeSeguridad: { pregunta: string, respuesta: string }[]}) {
-    const isValidQuestion = await this.crudService.validSecurityQuestion(userID, body.preguntasDeSeguridad);
-    if(!isValidQuestion) {
-      return respuesta.status(400).json({ message: 'Las respuestas son incorrectas.', isValidAnswers: false });
-    }
+    try {
+      const isValidQuestion = await this.crudService.validSecurityQuestion(userID, body.preguntasDeSeguridad);
+      if(!isValidQuestion) {
+        return respuesta.status(400).json({ message: 'Las respuestas son incorrectas', isValidAnswers: false });
+      }
 
-    return respuesta.status(HttpStatus.OK).json({
-      message: 'Las preguntas y respuestas han coincidido.',
-      isValidQuestion,
-      isValidAnswers: true
-    });
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Las preguntas y respuestas han coincidido',
+        isValidQuestion,
+        isValidAnswers: true
+      });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de verificar las preguntas de seguridad' });
+    }
   }
 
   @Post('changePassword/:userID')
@@ -239,7 +238,7 @@ async createAdmin(
       return respuesta.status(404).json({ message: 'Usuario no encontrado.' });
     }
     const userUpdated = await this.crudService.changePassword(userID, body.password);
-    return respuesta.status(HttpStatus.OK).json({ message: 'Se ha actualizado la contrasenia correctamente.', isPasswordChanged: true });
+    return respuesta.status(HttpStatus.OK).json({ message: 'Se ha actualizado la contraseña correctamente.', isPasswordChanged: true });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -275,7 +274,7 @@ async createAdmin(
       // Verificamos si el restaurante existe
       const restaurant = await this.crudService.getRestaurant(restaurantId);
       if (!restaurant) {
-        return resp.status(404).json({ message: 'Restaurante no encontrado.' });
+        return resp.status(404).json({ message: 'Restaurante no encontrado' });
       }
 
       // Añadimos el restaurante a los favoritos del usuario
@@ -307,12 +306,23 @@ async createAdmin(
       restaurants: [],
     },
   }})
-  async getRestaurantsLiked(@Res() resp, @Param('idUser') userID: string) {
-    const restaurantsLiked = await this.crudService.getRestaurantsLiked(userID);
-    return resp.status(HttpStatus.OK).json({
-      message: 'Restaurantes Favoritos',
-      restaurants: restaurantsLiked
-    });
+  async getRestaurantsLiked(@Res() respuesta, @Param('idUser') userID: string) {
+    try {
+      const restaurantsLiked = await this.crudService.getRestaurantsLiked(userID);
+      if(restaurantsLiked.length == 0) {
+        return respuesta.status(404).json({ 
+          message: 'No has dado me gusta a ningun restaurante aun',
+          restaurants: restaurantsLiked
+        });
+      }
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Restaurantes Favoritos',
+        restaurants: restaurantsLiked
+      });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de obtener los restaurantes que le has dado me gusta' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -327,12 +337,22 @@ async createAdmin(
     },
   }})
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async updateUser(@Res() resp, @Param('id') userID: string, @Body() userData: any) {
-    const userUpdated = await this.crudService.updateUser(userID, userData);
-    return resp.status(HttpStatus.OK).json({
-      message: 'Usuario Actualizado',
-      userUpdated: userUpdated
-    });
+  async updateUser(@Res() respuesta, @Param('id') userID: string, @Body() userData: any) {
+    try {
+      const userUpdated = await this.crudService.updateUser(userID, userData);
+
+      if(!userUpdated) {
+        return respuesta.status(404).json({ message: 'No se pudo actualizar datos del usuario' });
+      }
+
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Usuario Actualizado',
+        userUpdated
+      });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de actualizar datos del usuario' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -346,12 +366,30 @@ async createAdmin(
     },
   }})
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async deleteUser(@Res() resp, @Param('id') userID: string) {
-    const userDeleted = await this.crudService.deleteUser(userID);
-    return resp.status(HttpStatus.OK).json({
-      message: 'Usuario Borrado',
-      userDeleted
-    });
+  async deleteUser(@Res() respuesta, @Param('id') userID: string, @Request() req) {
+    try {
+      const user = await this.crudService.getUser(req.user.userId);
+      if(!user) {
+        return respuesta.status(404).json({ message: 'Error: Su identificador como usuario no pudo ser encontrado' });
+      }
+
+      if(user.typo != 'admin') {
+        return respuesta.status(404).json({ message: 'Acceso denegado: solo para administradores del sistema' });
+      }
+
+      const userDeleted = await this.crudService.deleteUser(userID);
+      if(!userDeleted) {
+        return respuesta.status(404).json({ message: 'El usuario no pudo ser eliminado' });
+      }
+
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Usuario Borrado',
+        userDeleted
+      });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de eliminar usuario' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -368,7 +406,7 @@ async createAdmin(
   async createRestaurant(@Res() respuesta, @Body() restaurantDTO: CreateRestaurantDTO, @Request() req) {
     const user = await this.crudService.getUser(req.user.userId);
     if(!user) {
-      return respuesta.status(404).json({ message: 'Error: Su identificador como usuario no pudo ser encontrado.' });
+      return respuesta.status(404).json({ message: 'Error: Su identificador como usuario no pudo ser encontrado' });
     }
 
     let newRestaurant = undefined;
@@ -388,7 +426,6 @@ async createAdmin(
     });
   }
 
-  //EDITAR
   @UseGuards(JwtAuthGuard)
   @Get('getRestaurants')
   @ApiOperation({ summary: 'Get all restaurants' })
@@ -400,18 +437,22 @@ async createAdmin(
   }})
   async getAllRestaurants(@Res() respuesta, @Request() req) {
     const user = await this.crudService.getUser(req.user.userId);
+    if(!user) {
+      return respuesta.status(404).json({ message: 'Error: su identificador como usuario no pudo ser encontrado'});
+    }
+
     let restaurantsFound = undefined;
     if(user.typo == 'admin') {
       restaurantsFound = await this.crudService.getAllRestaurants({});
-      if(!restaurantsFound) {
-        return respuesta.status(404).json({ message: 'No se encontraron restaurantes.' });
+      if(restaurantsFound.length == 0) {
+        return respuesta.status(404).json({ message: 'No se encontraron restaurantes' });
       }
     }
     else if(user.typo == 'user') {
       return respuesta.status(404).json({ message: 'Los usuarios no poseen restaurantes' });
     }
     else if(user.typo == 'propietario') {
-      restaurantsFound = await this.crudService.getAllRestaurants({own:req.user.userId});
+      restaurantsFound = await this.crudService.getAllRestaurants({own:req.user.userId, deshabilitarDatos: false});
     }
 
     return respuesta.status(HttpStatus.OK).json({
@@ -431,8 +472,10 @@ async createAdmin(
         const comentarios:reviewObject[] = [];
         for(const comentario of reviews) {
           const user = await this.crudService.getUser(comentario.idUser);
-          if(user.deshabilitarDatos == false) {
-            comentarios.push(comentario);
+          if(user != null) {
+            if(user.deshabilitarDatos == false) {
+              comentarios.push(comentario);
+            }
           }
         }
 
@@ -454,14 +497,14 @@ async createAdmin(
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
   async getRestaurant(@Res() respuesta, @Param('id') restaurantID: string, @Request() req) {
     const restaurantFound = await this.crudService.getRestaurant(restaurantID);
-    if(!restaurantFound) {
-      return respuesta.status(404).json({ message: 'Restaurante No Encontrado.' });
-    }
 
     //verificar si el restaurante esta baneado
     const isBan = await this.crudService.verifyBan(restaurantID, 'restaurant');
+    if(isBan == null) {
+      return respuesta.status(404).json({ message: 'Restaurante no encontrado' });
+    }
     if(isBan == true) {
-      return respuesta.status(404).json({ message: 'Restaurante Temporalmente Baneado.' });
+      return respuesta.status(404).json({ message: 'Restaurante Temporalmente Baneado' });
     }
 
     //No enviar a front comentarios de personas borradas
@@ -485,12 +528,15 @@ async createAdmin(
     summary: 'Get all names that match the requested name',
     description: 'Performs a request to the Restaurant database, and filters the Restaurant only by those who have a name similar to the requested one.'
   })
-  @Get('getRestaurantsByName/:nameRestaurant')
-  async getRestaurantsByName(@Res() resp, @Param('nameRestaurant') nameRestaurant: string) {
-    const userFound = await this.crudService.getRestaurantsByName(nameRestaurant);
-    return resp.status(HttpStatus.OK).json({
-      message: 'Usuario Encontrado',
-      userFound: userFound
+  @Post('getRestaurantsByName')
+  async getRestaurantsByName(@Res() respuesta, @Body() nameRestaurant, @Request() req) {
+    const restaurantsFound = await this.crudService.getRestaurantsByName(nameRestaurant.name);
+    if(!restaurantsFound) {
+      return respuesta.status(404).json({ message: 'No se encontraron restaurantes con ese nombre' });
+    }
+    return respuesta.status(HttpStatus.OK).json({
+      message: 'Restaurantes encontrados',
+      restaurantsFound
     });
   }
 
@@ -504,12 +550,17 @@ async createAdmin(
       restaurants: [],
     },
   }})
-  async getRestaurantsShowed(@Res() resp, @Param('idUser') userID: string) {
-    const restaurantsShowed = await this.crudService.getRestaurantsShowed(userID);
-    return resp.status(HttpStatus.OK).json({
-      message: 'Historial de Restaurantes Vistos',
-      restaurants: restaurantsShowed
-    });
+  async getRestaurantsShowed(@Res() respuesta, @Param('idUser') userID: string) {
+    try {
+      const restaurantsShowed = await this.crudService.getRestaurantsShowed(userID);
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Historial de Restaurantes Vistos',
+        restaurants: restaurantsShowed
+      });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de obtener el historial de restaurantes' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -525,11 +576,24 @@ async createAdmin(
   }})
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
   async updateRestaurant(@Res() respuesta, @Param('id') restaurantID: string, @Body() restaurantData: any) {
-    const restaurantUpdated = await this.crudService.updateRestaurant(restaurantID, restaurantData);
-    return respuesta.status(HttpStatus.OK).json({
-      message: 'Restaurante Actualizado',
-      restaurantUpdated
-    });
+    try {
+      const isBan = await this.crudService.verifyBan(restaurantID, 'restaurant');
+      if(isBan == null) {
+        respuesta.status(404).json({ message: 'Restaurante no encontrado' });
+      }
+      if(isBan == true) {
+        respuesta.status(404).json({ message: 'Restaurante Temporalmente Baneado' });
+      }
+
+      const restaurantUpdated = await this.crudService.updateRestaurant(restaurantID, restaurantData);
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Restaurante Actualizado',
+        restaurantUpdated
+      });
+    }
+    catch(e) {
+      respuesta.status(404).json({ message: 'Error al tratar de actualizar datos del restaurante' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -543,23 +607,37 @@ async createAdmin(
     },
   }})
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
-  async deleteRestaurant(@Res() respuesta, @Param('id') restaurantID: string) {
-    const restaurantDeleted = await this.crudService.deleteRestaurant(restaurantID); //Eliminamos el restaurante
+  async deleteRestaurant(@Res() respuesta, @Param('id') restaurantID: string, @Request() req) {
+    try {
+      const restaurant = await this.crudService.getRestaurant(restaurantID);
+      if(!restaurant) {
+        return respuesta.status(404).json({ message: 'Restaurante no encontrado' });
+      }
 
-    //Revisamos si el propietario solo es propietario del restaurante eliminado
-    const restaurantsOfUser = await this.crudService.getAllRestaurants({ own:restaurantDeleted.own });
-    if(restaurantsOfUser.length == 0) {
-      await this.crudService.updateUser(restaurantDeleted.own, { typo: "user" }); //Se cambia el propietario a typo "user"
+      if(req.user.userId != restaurant.own) {
+        return respuesta.status(404).json({ message: 'Error: solo el propietario del restaurante puede eliminarlo' });
+      }
+
+      const restaurantDeleted = await this.crudService.deleteRestaurant(restaurantID); //Eliminamos el restaurante
+
+      //Revisamos si el propietario solo es propietario del restaurante eliminado
+      const restaurantsOfUser = await this.crudService.getAllRestaurants({ own:restaurantDeleted.own, deshabilitarDatos: false });
+      if(restaurantsOfUser.length == 0) {
+        await this.crudService.updateUser(restaurantDeleted.own, { typo: "user" }); //Se cambia el propietario a typo "user"
+      }
+
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Restaurante Borrado',
+        restaurantDeleted
+      });
     }
-
-    return respuesta.status(HttpStatus.OK).json({
-      message: 'Restaurante Borrado',
-      restaurantDeleted
-    });
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de borrar el restaurante' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('filterRestaurants')
+  @Post('filterRestaurants')
   @ApiOperation({ summary: 'Filter restaurants by characteristics' })
   @ApiBody({ description: 'Filter options', type: Object })
   @ApiResponse({ status: 200, description: 'Filtered restaurants retrieved successfully.', schema: {
@@ -569,15 +647,24 @@ async createAdmin(
     },
   }})
   async filterRestaurants(@Res() respuesta, @Body() opcionesFiltro: any) {
-    const filteredRestaurants = await this.crudService.getAllRestaurants(opcionesFiltro);
-    return respuesta.status(HttpStatus.OK).json({
-      message: "Restaurantes que cumplen el filtro",
-      filteredRestaurants
-    });
+    try {
+      const filteredRestaurants = await this.crudService.getAllRestaurants(opcionesFiltro);
+      if(filteredRestaurants.length == 0) {
+        return respuesta.status(404).json({ message: 'No se encontraron coincidencias' });
+      }
+
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Restaurantes que cumplen el filtro',
+        filteredRestaurants
+      });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de filtrar los restaurantes' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('filterUsers')
+  @Post('filterUsers')
   @ApiOperation({ summary: 'Filter users by characteristics' })
   @ApiBody({ description: 'Filter options', type: Object })
   @ApiResponse({ status: 200, description: 'Filtered users retrieved successfully.', schema: {
@@ -587,11 +674,20 @@ async createAdmin(
     },
   }})
   async filterUsers(@Res() respuesta, @Body() opcionesFiltro: any) {
-    const filteredUsers = await this.crudService.getAllUsers(opcionesFiltro);
-    return respuesta.status(HttpStatus.OK).json({
-      message: "Usuarios que cumplen el filtro",
-      filteredUsers
-    });
+    try {
+      const filteredUsers = await this.crudService.getAllUsers(opcionesFiltro);
+      if(filteredUsers.length == 0) {
+        return respuesta.status(404).json({ message: 'No se encontraron coincidencias' });
+      }
+
+      return respuesta.status(HttpStatus.OK).json({
+        message: "Usuarios que cumplen el filtro",
+        filteredUsers
+      });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de filtrar los usuarios' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -737,11 +833,7 @@ async createAdmin(
       }
     }
   })
-  async getCommentById(
-    @Res() respuesta: Response,
-    @Param('restaurantId') restaurantID: string,
-    @Param('commentRequested') commentRequested: string
-  ) {
+  async getCommentById(@Res() respuesta, @Param('restaurantId') restaurantID: string, @Param('commentRequested') commentRequested: string) {
     try {
       const commentID = await this.crudService.getCommentById(restaurantID, commentRequested);
       if(commentID == -1) {
@@ -778,26 +870,22 @@ async createAdmin(
     },
   }})
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
-  async addComentario(@Param('idRestaurant') idRestaurant:string, @Body() coment:reviewObject, @Res() resp, @Request() req){
+  async addComentario(@Param('idRestaurant') idRestaurant:string, @Body() coment:reviewObject, @Res() respuesta, @Request() req){
     try{
-      const idUser = req.user.userId;
-      const restaurantComment = await this.crudService.addComment(idRestaurant, coment, idUser);
+      const restaurantComment = await this.crudService.addComment(idRestaurant, coment, req.user.userId);
       if(!restaurantComment){
-        return resp.status(404).json({
-          message:"Restaurant not found"
-        })
+        return respuesta.status(404).json({ message: 'Restaurante no encontrado' });
       }
 
       if(restaurantComment == 'Ya Comento') {
-        resp.status(HttpStatus.OK).json({
-          message:"Ya haz realizado un comentario o calificacion. Por favor, actualizarla."
-        })  
+        respuesta.status(404).json({ message: 'Ya haz realizado un comentario o calificacion. Por favor, actualizarla' });  
       }
 
-      resp.status(201).json({
-        message:"comment added sucessfully"
-      })
-    } catch(err) { console.error(err); }
+      respuesta.status(HttpStatus.OK).json({ message: 'Comentario añadido satisfactoriamente' });
+    } 
+    catch(e) {
+      respuesta.status(404).json({ message: 'Error al tratar de añadir el comentario' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -806,14 +894,21 @@ async createAdmin(
   @ApiResponse({ status: 400, description: 'Error al actualizar comentario' })
   @ApiBody({ type:  updateCommentDto})
   @Put('updateComment/:idRestaurant')
-  async updateComment(@Param('idRestaurant') idRes:string, @Body() updateData:any, @Res() resp, @Request() req) {
-    const idUser = req.user.userId;
-    const updatedComment = await this.crudService.updateComment(idRes,idUser,updateData);
+  async updateComment(@Param('idRestaurant') idRes:string, @Body() updateData:any, @Res() respuesta, @Request() req) {
+    try {
+      const updatedComment = await this.crudService.updateComment(idRes, req.user.userId, updateData);
+      if(!updatedComment) {
+        return respuesta.status(404).json({ message: 'No se pudo actualizar el comentario' });
+      }
 
-    return resp.status(HttpStatus.OK).json({
-      message: "Mensaje actualizado",
-      updatedComment
-    });
+      return respuesta.status(HttpStatus.OK).json({
+        message: 'Mensaje actualizado',
+        updatedComment
+      });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de actualizar el comentario' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -846,24 +941,22 @@ async createAdmin(
     }
   })
   @Delete('deleteComment/:idRestaurant/:idComment')
-  async deleteComment(
-    @Res() respuesta: Response,
-    @Param('idRestaurant') idRestaurant: string,
-    @Param('idComment') idComment: string
-  ) {
-    const commentDeleted = await this.crudService.deleteCommentById(idRestaurant, idComment);
+  async deleteComment(@Res() respuesta, @Param('idRestaurant') idRestaurant: string, @Param('idComment') idComment: string) {
+    try {
+      const commentDeleted = await this.crudService.deleteCommentById(idRestaurant, idComment);
 
-    if(!commentDeleted) {
-      return response.status(HttpStatus.NOT_FOUND).json({
-        message: "No se ha encontrado el comentario",
+      if(!commentDeleted) {
+        return respuesta.status(404).json({ message: 'No se ha podido eliminar el comentario' });
+      }
+
+      return respuesta.status(HttpStatus.OK).json({
+        message: "El comentario ha sido eliminado",
         commentDeleted
-      })
+      });
     }
-
-    return respuesta.status(HttpStatus.OK).json({
-      message: "El comentario ha sido eliminado",
-      commentDeleted
-    })
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de eliminar el comentario' });
+    }
   }
 
   //!Denuncias
@@ -884,19 +977,30 @@ async createAdmin(
       },
     },
   })
-  async getDenuncias(@Res() respuesta: Response, @Request() req) {
-    const user = await this.crudService.getUser(req.user.userId);
-    if(user.typo == 'admin') {
-      const denuncias = await this.crudService.getAllDenuncias({});
-      return respuesta.status(HttpStatus.OK).json({
-        message: "Todas las denuncias encontradas",
-        denuncias
-      }); 
-    } 
-    else {
-      return respuesta.status(404).json({
-        message: "Acceso denegado: Solo para administradores del sistema."
-      });
+  async getDenuncias(@Res() respuesta, @Request() req) {
+    try {
+      const user = await this.crudService.getUser(req.user.userId);
+      if(!user) {
+        return respuesta.status(404).json({ message: 'Error: su identificador como usuario no pudo ser encontrado'});
+      }
+
+      if(user.typo == 'admin') {
+        const denuncias = await this.crudService.getAllDenuncias({});
+        if(denuncias.length == 0) {
+          return respuesta.status(404).json({ message: 'No se han encontrado denuncias' });
+        }
+
+        return respuesta.status(HttpStatus.OK).json({
+          message: 'Todas las denuncias encontradas',
+          denuncias
+        }); 
+      } 
+      else {
+        return respuesta.status(404).json({ message: 'Acceso denegado: Solo para administradores del sistema' });
+      }
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de encontrar denuncias' });
     }
   }
   
@@ -938,25 +1042,30 @@ async createAdmin(
     }
   })
   @Post('filtrarDenuncias')
-  async filtrarDenuncias(@Res() respuesta: Response, @Body() opcionesFiltrado: any, @Request() req) {
-    const user = await this.crudService.getUser(req.user.userId);
-    if(user.typo == 'admin') {
-      const denunciasFiltradas = await this.crudService.getAllDenuncias(opcionesFiltrado);
-      if (denunciasFiltradas.length === 0) {
-        return respuesta.status(404).json({
-          message: 'No hay coincidencias'
+  async filtrarDenuncias(@Res() respuesta, @Body() opcionesFiltrado: any, @Request() req) {
+    try {
+      const user = await this.crudService.getUser(req.user.userId);
+      if(!user) {
+        return respuesta.status(404).json({ message: 'Error: su identificador como usuario no pudo ser encontrado'});
+      }
+
+      if(user.typo == 'admin') {
+        const denunciasFiltradas = await this.crudService.getAllDenuncias(opcionesFiltrado);
+        if (denunciasFiltradas.length == 0) {
+          return respuesta.status(404).json({ message: 'No hay coincidencias' });
+        }
+        
+        return respuesta.status(HttpStatus.OK).json({
+          message: 'Denuncias encontradas con el filtro',
+          denunciasFiltradas
         });
       }
-      
-      return respuesta.status(HttpStatus.OK).json({
-        message: "Denuncias encontradas con el filtro",
-        denunciasFiltradas
-      });
+      else {
+        return respuesta.status(404).json({ message: 'Acceso denegado: Solo para administradores del sistema' });
+      }
     }
-    else {
-      return respuesta.status(404).json({
-        message: "Acceso denegado: Solo para administradores del sistema."
-      });
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de encontrar coincidencias' });
     }
   }
 
@@ -993,24 +1102,29 @@ async createAdmin(
   })
   @Get('getDenuncia/:id')
   async getDenuncia(@Res() respuesta: Response, @Param('id') idDenuncia: string, @Request() req) {
-    const user = await this.crudService.getUser(req.user.userId);
-    if(user.typo == 'admin') {
-      const denunciaEncontrada = await this.crudService.getDenuncia(idDenuncia);
-      if(!denunciaEncontrada) {
-        return respuesta.status(HttpStatus.OK).json({
-          message: "Denuncia no encontrada"
-        });
+    try {
+      const user = await this.crudService.getUser(req.user.userId);
+      if(!user) {
+        return respuesta.status(404).json({ message: 'Error: su identificador como usuario no pudo ser encontrado'});
       }
 
-      return respuesta.status(HttpStatus.OK).json({
-        message: "Denuncia encontrada",
-        denunciaEncontrada
-      });
+      if(user.typo == 'admin') {
+        const denunciaEncontrada = await this.crudService.getDenuncia(idDenuncia);
+        if(!denunciaEncontrada) {
+          return respuesta.status(404).json({ message: 'Denuncia no encontrada' });
+        }
+
+        return respuesta.status(HttpStatus.OK).json({
+          message: 'Denuncia encontrada',
+          denunciaEncontrada
+        });
+      }
+      else {
+        return respuesta.status(HttpStatus.OK).json({ message: 'Acceso denegado: Solo para administradores del sistema' });
+      }
     }
-    else {
-      return respuesta.status(HttpStatus.OK).json({
-        message: "Acceso denegado: Solo para administradores del sistema."
-      });
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de obtener la denuncia' });
     }
   }
 
@@ -1048,24 +1162,29 @@ async createAdmin(
   })
   @Post('procesarDenuncia/:id')
   async procesarDenuncia(@Res() respuesta, @Param('id') idDenuncia: string, @Body() estadoDenuncia: any, @Request() req) {
-    const user = await this.crudService.getUser(req.user.userId);
-    if(user.typo == 'admin') {
-      const denunciaProcesada = await this.crudService.procesarDenuncia(idDenuncia, estadoDenuncia, req.user.userId);
-      if(!denunciaProcesada) {
-        return respuesta.status(404).json({
-          message: "Denuncia No Procesada"
-        });  
+    try {
+      const user = await this.crudService.getUser(req.user.userId);
+      if(!user) {
+        return respuesta.status(404).json({ message: 'Error: su identificador como usuario no pudo ser encontrado'});
       }
 
-      return respuesta.status(HttpStatus.OK).json({
-        message: "Denuncia Procesada Con Exito",
-        denunciaProcesada
-      });
+      if(user.typo == 'admin') {
+        const denunciaProcesada = await this.crudService.procesarDenuncia(idDenuncia, estadoDenuncia, req.user.userId);
+        if(!denunciaProcesada) {
+          return respuesta.status(404).json({ message: 'Denuncia no procesada' });  
+        }
+
+        return respuesta.status(HttpStatus.OK).json({
+          message: 'Denuncia Procesada Con Exito',
+          denunciaProcesada
+        });
+      }
+      else {
+        return respuesta.status(404).json({ message: 'Acceso denegado: Solo para administradores del sistema' });
+      }
     }
-    else {
-      return respuesta.status(404).json({
-        message: "Acceso denegado: Solo para administradores del sistema."
-      });
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de procesar la denuncia' });
     }
   }
 
@@ -1082,10 +1201,13 @@ async createAdmin(
   })
   @Post('denunciarComentario/:idRestaurante/:idComentario')
   async denunciarComentario(@Res() respuesta, @Param('idComentario') idComentario: string, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
-    await this.crudService.agregarDenunciaComentario(idComentario, idRestaurante, obs.observacion, obs.razon, req.user.userId);
-    return respuesta.status(HttpStatus.OK).json({
-      message: "Comentario denunciado correctamente"
-    });
+    try {
+      await this.crudService.agregarDenunciaComentario(idComentario, idRestaurante, obs.observacion, obs.razon, req.user.userId);
+      return respuesta.status(HttpStatus.OK).json({ message: 'Comentario denunciado correctamente' });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de denunciar comentario' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -1100,14 +1222,17 @@ async createAdmin(
   })
   @Post('denunciarRestaurante/:idRestaurante')
   async denunciarRestaurante(@Res() respuesta, @Param('idRestaurante') idRestaurante: string, @Body() obs: any, @Request() req) {
-    await this.crudService.agregarDenunciaRestaurante(idRestaurante, obs.observacion, obs.razon, req.user.userId);
-    return respuesta.status(HttpStatus.OK).json({
-      message: "Restaurante denunciado correctamente"
-    });
+    try {
+      await this.crudService.agregarDenunciaRestaurante(idRestaurante, obs.observacion, obs.razon, req.user.userId);
+      return respuesta.status(HttpStatus.OK).json({ message: 'Restaurante denunciado correctamente' });
+    }
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de denunciar restaurante' });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('eliminarDenuncia/:denunciaID')
+  @Delete('deleteDenuncia/:denunciaID')
   @ApiOperation({
     summary: 'Delete a Denuncia based on its ID',
     description: 'Searches the Denuncia database for a Denuncia matching the ID and deletes it.'
@@ -1132,18 +1257,29 @@ async createAdmin(
     }
   })
   async eliminarDenuncia(@Res() respuesta: Response, @Param('denunciaID') denunciaID: string, @Request() req) {
-    const user = await this.crudService.getUser(req.user.userId);
-    if(user.typo == 'admin') {
-      const denunciaDeleted = await this.crudService.deleteDenuncia(denunciaID);
-      return respuesta.status(HttpStatus.OK).json({
-        message: 'Denunciada eliminada correctamente',
-        denunciaDeleted
-      });
+    try {
+      const user = await this.crudService.getUser(req.user.userId);
+      if(!user) {
+        return respuesta.status(404).json({ message: 'Error: su identificador como usuario no pudo ser encontrado'});
+      }
+      
+      if(user.typo == 'admin') {
+        const denunciaDeleted = await this.crudService.deleteDenuncia(denunciaID);
+        if(!denunciaDeleted) {
+          return respuesta.status(404).json({ message: 'No se ha encontrado la denuncia a eliminar' });
+        }
+
+        return respuesta.status(HttpStatus.OK).json({
+          message: 'Denunciada eliminada correctamente',
+          denunciaDeleted
+        });
+      }
+      else {
+        return respuesta.status(404).json({ message: 'Acceso denegado: Solo para administradores del sistema' });
+      }
     }
-    else {
-      return respuesta.status(HttpStatus.OK).json({
-        message: "Acceso denegado: Solo para administradores del sistema."
-      });
+    catch(e) {
+      return respuesta.status(404).json({ message: 'Error al tratar de eliminar la denuncia' });
     }
   }
 
