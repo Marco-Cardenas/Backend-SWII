@@ -339,6 +339,14 @@ async createAdmin(
   @ApiResponse({ status: 404, description: 'User not found.' })
   async updateUser(@Res() respuesta, @Param('id') userID: string, @Body() userData: any) {
     try {
+      
+      if(userData.email !== undefined){
+        const emailTaken = await this.crudService.getUserByEmail(userData.email)
+        if(emailTaken && emailTaken.id !== userData.id){
+          return respuesta.status(409).json({ message: 'Email duplicado' });
+        }
+      }
+
       const userUpdated = await this.crudService.updateUser(userID, userData);
 
       if(!userUpdated) {
