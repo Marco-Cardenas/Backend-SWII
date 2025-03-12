@@ -6,9 +6,6 @@ export class CreateRestaurantDTO {
   @ApiProperty({ description: 'Restaurant name' })
   name: string;
 
-  @ApiProperty({ description: 'Restaurant rif' })
-  rif: string;
-
   @ApiProperty({ description: 'Restaurant owner' })
   own: string;
 

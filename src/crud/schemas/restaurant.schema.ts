@@ -4,7 +4,6 @@ import { reviewObject } from "../interfaces/restaurant.interface";
 // Esquema del restaurante
 export const RestaurantSchema = new Schema({
   name: { type: String, default: '' },
-  rif: { type: String, default: '' },
   own: { type: String, default: '' },
   fotoPerfil: { type: String, default: '' },
   description: { type: String, default: '' },

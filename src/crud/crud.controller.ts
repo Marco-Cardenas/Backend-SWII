@@ -177,7 +177,7 @@ async createAdmin(
     summary: 'Buscar Usuarios por el nombre',
     description: 'El Front-end debe mandar un JSON asi: { "name" : "nombre a buscar" }'
   })
-  @Get('getUserByName')
+  @Post('getUserByName')
   async getUserByName(@Res() respuesta, @Body() userName: { name:string }, @Request() req) {
     const user = await this.crudService.getUser(req.user.userId);
     if(!user) {
