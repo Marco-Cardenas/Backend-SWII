@@ -197,11 +197,30 @@ export class CrudService {
   }
 
   async updateUser(userID: string, userData: any): Promise<User> {
+
     if (userData.password !== undefined) {
       const salt = await bcrypt.genSalt()
       userData.password = await bcrypt.hash(userData.password, salt); 
     }
+    
     const userUpdated = await this.userModel.findByIdAndUpdate(userID, userData, { new: true });
+
+     //* modificar cada restaurant donde el usuario comento
+     const restaurants = await this.restaurantModel.find();
+
+     const bulkOps = restaurants.map(restaurant => ({
+      updateOne: {
+        filter: { _id: restaurant._id, 'reviews.idUser': userID },
+        update: { $set: { 'reviews.$.userName': userData.name } },
+      },
+    }));
+
+    try {
+      await this.restaurantModel.bulkWrite(bulkOps);
+     // console.log('Actualización completada');
+    } catch (err) {
+     // console.error('Error al actualizar los comentarios:', err);
+    }
     return userUpdated;
   }
 
