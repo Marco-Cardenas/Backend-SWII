@@ -96,20 +96,16 @@ async createAdmin(
       message: 'Credenciales inválidas',
     },
   }})
-  async login(@Res() resp, @Body() loginDTO: loginDto, @Request() req) {
+  async login(@Res() resp, @Body() loginDTO: loginDto) {
     const user = await this.authService.validateUser(loginDTO.email, loginDTO.password);
     if (!user) {
-      return resp.status(HttpStatus.UNAUTHORIZED).json({
-        message: 'Credenciales inválidas',
-      });
+      return resp.status(HttpStatus.UNAUTHORIZED).json({ message: 'Credenciales inválidas' });
     }
 
     const token = await this.authService.loginFromMongoose(user);
     const isBan: boolean = await this.crudService.verifyBan(token.id, 'user');
     if(isBan == true) {
-      return resp.status(404).json({
-        message: 'Usuario Temporalmente Baneado'
-      });  
+      return resp.status(404).json({ message: 'Usuario Temporalmente Baneado' });  
     }
 
     return resp.status(HttpStatus.OK).json({
@@ -127,10 +123,23 @@ async createAdmin(
       usersFound: [],
     },
   }})
-  async getAllUsers(@Res() respuesta) {
+  async getAllUsers(@Res() respuesta, @Request() req) {
+    const user = await this.crudService.getUser(req.user.userId);
+    if(!user) {
+      return respuesta.status(404).json({ message: 'Error: Usuario no registrado.' });
+    }
+
+    if(user.typo != 'admin') {
+      return respuesta.status(404).json({ message: 'Acceso denegado: solo para administradores del sistema.' });
+    }
+
     const usersFound = await this.crudService.getAllUsers({ deshabilitarDatos: false });
+    if(!usersFound) {
+      return respuesta.status(404).json({ message: 'No se encontraron usuarios.' });
+    }
+
     return respuesta.status(HttpStatus.OK).json({
-      message: 'Todos los Usuarios',
+      message: 'Todos los usuarios encontrados',
       usersFound
     });
   }
@@ -146,22 +155,18 @@ async createAdmin(
     },
   }})
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async getUser(@Res() resp, @Param('id') userID: string) {
+  async getUser(@Res() respuesta, @Param('id') userID: string) {
     const userFound = await this.crudService.getUser(userID);
     if(!userFound) {
-      return resp.status(HttpStatus.NOT_FOUND).json({
-        message: "User not found."
-      }) 
+      return respuesta.status(404).json({ message: 'Usuario no encontrado.' }); 
     }
 
     const isBan = await this.crudService.verifyBan(userID, 'user');
     if(isBan == true) {
-      return resp.status(404).json({
-        message: 'Usuario Temporalmente Baneado'
-      });
+      return respuesta.status(404).json({ message: 'Usuario Temporalmente Baneado.' });
     }
 
-    return resp.status(HttpStatus.OK).json({
+    return respuesta.status(HttpStatus.OK).json({
       message: 'Usuario Encontrado',
       userFound
     });
@@ -169,69 +174,72 @@ async createAdmin(
 
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
-    summary: 'Get all names that match the requested name',
-    description: 'Performs a request to the Users database, and filters the users only by those who have a name similar to the requested one.'
+    summary: 'Buscar Usuarios por el nombre',
+    description: 'El Front-end debe mandar un JSON asi: { "name" : "nombre a buscar" }'
   })
-  @Get('getUserByName/:nameUser')
-  async getUserByName(@Res() resp, @Param('nameUser') nameUser: string) {
-    const userFound = await this.crudService.getUserByName(nameUser);
-    return resp.status(HttpStatus.OK).json({
+  @Get('getUserByName')
+  async getUserByName(@Res() respuesta, @Body() userName: { name:string }, @Request() req) {
+    const user = await this.crudService.getUser(req.user.userId);
+    if(!user) {
+      return respuesta.status(404).json({ message: 'No se encontro un usuario con ese identificador.' });   
+    }
+
+    if(user.typo != 'admin') {
+      return respuesta.status(404).json({ message: 'Acceso denegado: solo para administradores del sistema.' });   
+    }
+
+    const userFound = await this.crudService.getUserByName(userName.name);
+    if(!userFound) {
+      return respuesta.status(404).json({ message: 'No se encontraron usuarios con ese nombre.' });   
+    }
+
+    return respuesta.status(HttpStatus.OK).json({
       message: 'Usuario Encontrado',
-      userFound: userFound
+      userFound
     });
   }
 
   @Post('forgotPassword')
   @ApiOperation({ summary: 'Checks if an email exists in the database' })
-  @ApiResponse({ status: 200, description: 'Este correo existe' })
-  @ApiResponse({ status: 400, description: 'No existe este correo' })
-  async forgotPassword(@Res() respuesta: Response, @Body() body: { email: string }) {
+  @ApiResponse({ status: 200, description: 'Este correo existe y devuelve verdadero (true) en la varaible "isValidEmail", ademas de enviar una variable "user" con los datos del usuario' })
+  @ApiResponse({ status: 404, description: 'No existe este correo y devuelve falso (false) en la varaible "isValidEmail"' })
+  async forgotPassword(@Res() respuesta, @Body() body: { email: string }) {
     const emailValid = await this.crudService.forgotPassword(body.email);
     if(!emailValid) {
-      return respuesta.status(400).json({
-        message: 'No existe este correo'
-
-
-      })
+      return respuesta.status(404).json({ message: 'No existe este correo.', isValidEmail:false });
     }
 
-    return respuesta.status(HttpStatus.OK).json({
-      message: 'Este correo existe'
-    })
+    const user = await this.crudService.getUserByEmail(body.email);
+    return respuesta.status(HttpStatus.OK).json({ message: 'Este correo existe.', isValidEmail:true, user });
   }
   
-  @Post('validSecurityQuestion/:idUser')
-  @ApiOperation({ summary: 'Validates user answers to security questions' })
+  @Post('validSecurityQuestion/:userID')
+  @ApiOperation({ summary: 'Valida lo bien o mal respondida que hayan estado las preguntas de seguridad en forma booleana en una variable llamada "isValidAnswers"' })
   @ApiResponse({ status: 200, description: 'Las preguntas y respuestas han coincidido' })
   @ApiResponse({ status: 400, description: 'Las respuestas son incorrectas' })
-  async validQuestion(
-    @Res() respuesta: Response, 
-    @Param('idUser') idUser: string,  
-    @Body() body: { preguntasSeguridad: { pregunta: string, respuesta: string }[]}) {
-    const isValidQuestion = await this.crudService.validSecurityQuestion(idUser, body.preguntasSeguridad);
+  async validQuestion(@Res() respuesta, @Param('userID') userID: string, @Body() body: { preguntasDeSeguridad: { pregunta: string, respuesta: string }[]}) {
+    const isValidQuestion = await this.crudService.validSecurityQuestion(userID, body.preguntasDeSeguridad);
     if(!isValidQuestion) {
-      return respuesta.status(400).json({
-        message: 'Las respuestas son incorrectas'
-      })
+      return respuesta.status(400).json({ message: 'Las respuestas son incorrectas.', isValidAnswers: false });
     }
 
     return respuesta.status(HttpStatus.OK).json({
-      message: 'Las preguntas y respuestas han coincidido',
-      isValidQuestion
-    })
+      message: 'Las preguntas y respuestas han coincidido.',
+      isValidQuestion,
+      isValidAnswers: true
+    });
   }
 
-  @Post('changePassword/:idUser')
-  @ApiOperation({ summary: 'Change user password using bcrypt' })
+  @Post('changePassword/:userID')
+  @ApiOperation({ summary: 'Se cambia la contrasenia usando bcrypt, ademas se envia una variable llamada "isPasswordChanged" para saber si se cambio correctamente (true)' })
   @ApiResponse({ status: 200, description: 'Se ha actualizado la contraseña correctamente' })
-  async changePassword(
-    @Res() respuesta: Response, 
-    @Body() body: { password: string },
-    @Param('idUser') idUser: string) {
-    const user = await this.crudService.changePassword(idUser, body.password);
-    return respuesta.status(HttpStatus.OK).json({
-      message: 'Se ha actualizado la contrasena correctamente'
-    })
+  async changePassword(@Res() respuesta, @Param('userID') userID: string, @Body() body: { password: string }) {
+    const user = await this.crudService.getUser(userID);
+    if(!user) {
+      return respuesta.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+    const userUpdated = await this.crudService.changePassword(userID, body.password);
+    return respuesta.status(HttpStatus.OK).json({ message: 'Se ha actualizado la contrasenia correctamente.', isPasswordChanged: true });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -259,11 +267,7 @@ async createAdmin(
   })
   @ApiResponse({ status: 404, description: 'Restaurant or User not found.' })
   @ApiResponse({ status: 400, description: 'Restaurant already in favorites.' })
-  async addFavoriteRestaurant(
-    @Res() resp: Response,
-    @Request() req,
-    @Body() body: { restaurantId: string }
-  ) {
+  async addFavoriteRestaurant(@Res() resp, @Request() req, @Body() body: { restaurantId: string }) {
     try {
       const userId = req.user.userId; // Obtenemos el ID del usuario desde el token
       const { restaurantId } = body;
@@ -271,18 +275,14 @@ async createAdmin(
       // Verificamos si el restaurante existe
       const restaurant = await this.crudService.getRestaurant(restaurantId);
       if (!restaurant) {
-        return resp.status(HttpStatus.NOT_FOUND).json({
-          message: 'Restaurante no encontrado'
-        });
+        return resp.status(404).json({ message: 'Restaurante no encontrado.' });
       }
 
       // Añadimos el restaurante a los favoritos del usuario
       const userUpdated = await this.crudService.addRestaurantToFavorites(userId, restaurantId);
       
       if (!userUpdated) {
-        return resp.status(HttpStatus.NOT_FOUND).json({
-          message: 'Usuario no encontrado'
-        });
+        return resp.status(404).json({ message: 'Usuario no encontrado' });
       }
 
       return resp.status(HttpStatus.OK).json({
@@ -367,11 +367,13 @@ async createAdmin(
   @ApiResponse({ status: 400, description: 'Bad request.' })
   async createRestaurant(@Res() respuesta, @Body() restaurantDTO: CreateRestaurantDTO, @Request() req) {
     const user = await this.crudService.getUser(req.user.userId);
+    if(!user) {
+      return respuesta.status(404).json({ message: 'Error: Su identificador como usuario no pudo ser encontrado.' });
+    }
+
     let newRestaurant = undefined;
     if(user.typo == 'admin') {
-      return respuesta.status(HttpStatus.OK).json({
-        message:"Administradores no pueden crear restaurantes"
-      });
+      return respuesta.status(404).json({ message: 'Administradores no pueden crear restaurantes' });
     }
     else {
       restaurantDTO.own = req.user.userId; //Se establece al usuario como dueño
@@ -401,9 +403,12 @@ async createAdmin(
     let restaurantsFound = undefined;
     if(user.typo == 'admin') {
       restaurantsFound = await this.crudService.getAllRestaurants({});
+      if(!restaurantsFound) {
+        return respuesta.status(404).json({ message: 'No se encontraron restaurantes.' });
+      }
     }
     else if(user.typo == 'user') {
-      return respuesta.status(HttpStatus.OK).json({ message:"Los usuarios no poseen restaurantes" });
+      return respuesta.status(404).json({ message: 'Los usuarios no poseen restaurantes' });
     }
     else if(user.typo == 'propietario') {
       restaurantsFound = await this.crudService.getAllRestaurants({own:req.user.userId});
@@ -415,6 +420,7 @@ async createAdmin(
     });
   }
 
+  //Se ocultaran los comentarios de personas borradas, NO SE OCULTARAN LOS MENSAJES DE UNA PERSONA BANEADA
   async ocultarReviews(reviews):Promise<reviewObject[]> {
     return new Promise(
       async(resolve) => {
@@ -448,14 +454,16 @@ async createAdmin(
   @ApiResponse({ status: 404, description: 'Restaurant not found.' })
   async getRestaurant(@Res() respuesta, @Param('id') restaurantID: string, @Request() req) {
     const restaurantFound = await this.crudService.getRestaurant(restaurantID);
+    if(!restaurantFound) {
+      return respuesta.status(404).json({ message: 'Restaurante No Encontrado.' });
+    }
 
     //verificar si el restaurante esta baneado
     const isBan = await this.crudService.verifyBan(restaurantID, 'restaurant');
     if(isBan == true) {
-      return respuesta.status(404).json({
-        message: 'Restaurante Temporalmente Baneado'
-      });
+      return respuesta.status(404).json({ message: 'Restaurante Temporalmente Baneado.' });
     }
+
     //No enviar a front comentarios de personas borradas
     restaurantFound.reviews = await this.ocultarReviews(restaurantFound.reviews);
 
