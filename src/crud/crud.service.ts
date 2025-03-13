@@ -40,24 +40,30 @@ export class CrudService {
   }
 
   async getNearbyRestaurants(
-    latitud: number, 
-    longitud: number, 
-    anguloCamara: number, 
-    distanciaRequerida: number,
-    idUser: string,
-    foto: string
+    latitud: string,  
+    longitud: string,  
+    anguloCamara: string,  
+    distanciaRequerida: string,  
+    idUser: string,  
+    foto: string  
   ) {
+    // Convertir los valores string a number
+    const latitudNum = parseFloat(latitud);
+    const longitudNum = parseFloat(longitud);
+    const anguloCamaraNum = parseFloat(anguloCamara);
+    const distanciaRequeridaNum = parseFloat(distanciaRequerida);
+  
     // Radio de la tierra en kilómetros
     const earthRadius = 6371;
-
+  
     // Convertimos la distancia requerida de metros a kilómetros
-    const distanceKm = distanciaRequerida / 1000;
-
+    const distanceKm = distanciaRequeridaNum / 1000;
+  
     // Conversión de grados a radianes
     const convertRadians = (coordinates: number) => coordinates * Math.PI / 180;
-
-    const calculateDistance = (latitudUser: number, longitudUser: number, latitudeRestaurant: number, longitudeRestaurant): number => {
-      // Longitudes y latitudes en Radianes
+  
+    const calculateDistance = (latitudUser: number, longitudUser: number, latitudeRestaurant: number, longitudeRestaurant: number): number => {
+      // Convertir coordenadas a radianes
       const lat = convertRadians(latitudUser);
       const lon = convertRadians(longitudUser);
       const lat1Rad = convertRadians(latitudeRestaurant);
@@ -66,58 +72,59 @@ export class CrudService {
       // Diferencia de latitud y longitud
       const differenceLat = lat - lat1Rad;
       const differenceLon = lon - lon1Rad;
-
+  
       // Fórmula de Haversine
       const a = Math.sin(differenceLat / 2) * Math.sin(differenceLat / 2) + 
                 Math.sin(differenceLon / 2) * Math.sin(differenceLon / 2) * 
                 Math.cos(lat) * Math.cos(lat1Rad);
-
+  
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distance = earthRadius * c;   
-
-      return distance 
+  
+      return distance;
     };
-
-    // Recopilamos todos los restaurantes
+  
+    // Recopilamos todos los restaurantes dentro de un pequeño rango de latitud/longitud
     const allRestaurants = await this.restaurantModel.find({
-      latitude: { $gt: latitud - 0.005, $lt: latitud + 0.005 },
-      longitud: { $gt: longitud - 0.005, $lt: longitud + 0.005 }
+      latitude: { $gt: latitudNum - 0.005, $lt: latitudNum + 0.005 },
+      longitud: { $gt: longitudNum - 0.005, $lt: longitudNum + 0.005 }
     });
-
+  
     const escaneosNear = [];
     const idRestaurants = [];
     
-    for(const restaurant of allRestaurants) {
-      const distance = calculateDistance(latitud, longitud, restaurant.latitude, restaurant.longitude);
+    for (const restaurant of allRestaurants) {
+      const distance = calculateDistance(latitudNum, longitudNum, restaurant.latitude, restaurant.longitude);
       
       // Comprobamos que la distancia del restaurante sea menor o igual a la requerida
-      if(distance <= distanceKm) {
+      if (distance <= distanceKm) {
         const restaurantData = { ...restaurant.toObject(), distance };
         delete restaurantData.fotos;
-
+  
         // Insertamos el restaurante cercano
         escaneosNear.push(restaurant);
-
+  
         // Insertamos el id del restaurante cercano 
         idRestaurants.push(restaurant._id);
       }
     }
-
-    const fechaUTC:Date = new Date();
-    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
+  
+    const fechaUTC: Date = new Date();
+    const fechaGMT4: Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
     const escaneos = new this.escaneoModel({
       foto: foto,
-      latitud: latitud,
-      longitud: longitud,
-      anguloCamara: anguloCamara,
+      latitud: latitudNum,
+      longitud: longitudNum,
+      anguloCamara: anguloCamaraNum,
       fecha: fechaGMT4,
       idUser: idUser,
       restaurantesCercanos: idRestaurants
     });
-
-    await this.createEscaneo(escaneos); 
+  
+    await this.createEscaneo(escaneos);
     return escaneosNear;
-}
+  }
+  
 
   async updateEscaneo(escaneoID: string, escaneoData: any): Promise<Escaneo> {
     //el valor {new:true} se usa para retornar el escaneo despues de actualizarla

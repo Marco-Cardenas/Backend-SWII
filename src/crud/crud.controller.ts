@@ -671,10 +671,10 @@ async createAdmin(
   })
   async getNearbyRestaurants( 
     @Res() respuesta: Response, 
-    @Param('latitud') latitud: number, 
-    @Param('longitud') longitud: number, 
-    @Param('anguloCamara') anguloCamara: number,
-    @Param('distanciaRequerida') distanciaRequerida: number,
+    @Param('latitud') latitud: string, 
+    @Param('longitud') longitud: string, 
+    @Param('anguloCamara') anguloCamara: string,
+    @Param('distanciaRequerida') distanciaRequerida: string,
     @Request() req,
     @Body() body: { foto: string }
   ) {
