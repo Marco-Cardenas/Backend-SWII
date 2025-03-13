@@ -53,6 +53,13 @@ export class CrudService {
     const anguloCamaraNum = parseFloat(anguloCamara);
     const distanciaRequeridaNum = parseFloat(distanciaRequerida);
   
+    console.log(latitudNum);
+    console.log(longitudNum);
+    console.log(anguloCamara);
+    console.log(distanciaRequeridaNum);
+
+
+
     // Radio de la tierra en kilómetros
     const earthRadius = 6371;
   
@@ -89,6 +96,8 @@ export class CrudService {
       latitude: { $gt: latitudNum - 0.005, $lt: latitudNum + 0.005 },
       longitud: { $gt: longitudNum - 0.005, $lt: longitudNum + 0.005 }
     });
+
+    console.log("Todos los restaurantes son: "  + allRestaurants )
   
     const escaneosNear = [];
     const idRestaurants = [];
