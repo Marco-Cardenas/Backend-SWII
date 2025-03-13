@@ -881,6 +881,12 @@ async createAdmin(
       }
     }
   })
+  @ApiBody({schema: {
+    example: {
+      restaurantId: "string",
+      userId: "string",
+    },
+  }})
   async getCommentByIdUser(
     @Res() respuesta,
     @Body() body: { restaurantId: string, userId: string }
