@@ -94,7 +94,7 @@ export class CrudService {
     // Recopilamos todos los restaurantes dentro de un pequeño rango de latitud/longitud
     const allRestaurants = await this.restaurantModel.find({
       latitude: { $gt: latitudNum - 0.005, $lt: latitudNum + 0.005 },
-      longitud: { $gt: longitudNum - 0.005, $lt: longitudNum + 0.005 }
+      longitude: { $gt: longitudNum - 0.005, $lt: longitudNum + 0.005 }
     });
 
     console.log("Todos los restaurantes son: "  + allRestaurants )
