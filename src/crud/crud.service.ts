@@ -179,9 +179,7 @@ export class CrudService {
 
   async getUser(userID: string): Promise<User> {
     const user = await this.userModel.findById(userID);
-    if(user.deshabilitarDatos) {
-      return null;
-    }
+    
     if(!user) {
       return null;
     }
