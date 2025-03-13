@@ -79,7 +79,10 @@ export class CrudService {
     };
 
     // Recopilamos todos los restaurantes
-    const allRestaurants = await this.restaurantModel.find({});
+    const allRestaurants = await this.restaurantModel.find({
+      latitude: { $gt: latitud - 0.005, $lt: latitud + 0.005 },
+      longitud: { $gt: longitud - 0.005, $lt: longitud + 0.005 }
+    });
 
     const escaneosNear = [];
     const idRestaurants = [];
