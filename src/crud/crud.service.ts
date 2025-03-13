@@ -93,7 +93,7 @@ export class CrudService {
         delete restaurantData.fotos;
 
         // Insertamos el restaurante cercano
-        escaneosNear.push(restaurant);
+        escaneosNear.push(restaurantData);
 
         // Insertamos el id del restaurante cercano 
         idRestaurants.push(restaurant._id);
