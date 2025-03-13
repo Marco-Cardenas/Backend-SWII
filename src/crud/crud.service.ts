@@ -245,11 +245,11 @@ export class CrudService {
   async validSecurityQuestion(idUser: string, preguntasDeSeguridad: { pregunta: string, respuesta: string }[]): Promise<boolean> {
     const user = await this.getUser(idUser);
     if(!user) {
-      return null;
+      return false;
     }
     const isValid = user.preguntasDeSeguridad.every(preguntaUser => {
       return preguntasDeSeguridad.some(preguntaComprobar => {
-        preguntaUser.pregunta === preguntaComprobar.pregunta && preguntaUser.respuesta === preguntaComprobar.respuesta
+        return preguntaUser.pregunta === preguntaComprobar.pregunta && preguntaUser.respuesta === preguntaComprobar.respuesta
       })
     })
     return isValid;
