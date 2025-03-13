@@ -52,13 +52,6 @@ export class CrudService {
     const longitudNum = parseFloat(longitud);
     const anguloCamaraNum = parseFloat(anguloCamara);
     const distanciaRequeridaNum = parseFloat(distanciaRequerida);
-  
-    console.log(latitudNum);
-    console.log(longitudNum);
-    console.log(anguloCamara);
-    console.log(distanciaRequeridaNum);
-
-
 
     // Radio de la tierra en kilómetros
     const earthRadius = 6371;
@@ -96,8 +89,6 @@ export class CrudService {
       latitude: { $gt: latitudNum - 0.005, $lt: latitudNum + 0.005 },
       longitude: { $gt: longitudNum - 0.005, $lt: longitudNum + 0.005 },
     }).select('-fotos');
-
-    console.log("Todos los restaurantes son: "  + allRestaurants )
   
     const escaneosNear = [];
     const idRestaurants = [];
@@ -108,10 +99,8 @@ export class CrudService {
       // Comprobamos que la distancia del restaurante sea menor o igual a la requerida
       if (distance <= distanceKm) {
         const restaurantData = { ...restaurant.toObject(), distance };
-//        delete restaurantData.fotos;
   
         // Insertamos el restaurante cercano
-  
         escaneosNear.push(restaurantData);
 
         // Insertamos el id del restaurante cercano 
