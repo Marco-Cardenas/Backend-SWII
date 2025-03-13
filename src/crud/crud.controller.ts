@@ -381,19 +381,22 @@ async createAdmin(
         return respuesta.status(404).json({ message: 'Error: Su identificador como usuario no pudo ser encontrado' });
       }
 
-      if(user.typo != 'admin') {
-        return respuesta.status(404).json({ message: 'Acceso denegado: solo para administradores del sistema' });
+      if(user.typo == 'admin' || req.user.userId == userID) {
+        const userDeleted = await this.crudService.deleteUser(userID);
+        if(!userDeleted) {
+          return respuesta.status(404).json({ message: 'El usuario no pudo ser eliminado' });
+        }
+
+        return respuesta.status(HttpStatus.OK).json({
+          message: 'Usuario Borrado',
+          userDeleted
+        });
+      }
+      else {
+        return respuesta.status(404).json({ message: 'No posees el permiso de eliminar este usuario' });
       }
 
-      const userDeleted = await this.crudService.deleteUser(userID);
-      if(!userDeleted) {
-        return respuesta.status(404).json({ message: 'El usuario no pudo ser eliminado' });
-      }
-
-      return respuesta.status(HttpStatus.OK).json({
-        message: 'Usuario Borrado',
-        userDeleted
-      });
+      
     }
     catch(e) {
       return respuesta.status(404).json({ message: 'Error al tratar de eliminar usuario' });
@@ -1320,7 +1323,7 @@ async createAdmin(
       if(!user) {
         return respuesta.status(404).json({ message: 'Error: su identificador como usuario no pudo ser encontrado'});
       }
-      
+
       if(user.typo == 'admin') {
         const denunciaDeleted = await this.crudService.deleteDenuncia(denunciaID);
         if(!denunciaDeleted) {

@@ -14,6 +14,9 @@ export class AuthService {
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.crudService.getUserByEmail(email);
+    if(user.deshabilitarDatos) {
+      return null;
+    }
     if (user && await bcrypt.compare(pass, user.password)) {
       const { password, ...result } = user;
       return result;

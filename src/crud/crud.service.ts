@@ -1,4 +1,4 @@
-import { Injectable,Res } from '@nestjs/common';
+import { Injectable,Res, UseInterceptors } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId, Types } from 'mongoose';
 import { User } from './interfaces/user.interface';
@@ -132,7 +132,7 @@ export class CrudService {
   //Serivicios para usuarios
   async createUser(userDTO: CreateUserDTO): Promise<User> {
     const email = userDTO.email;
-    const emailTaken = await this.userModel.findOne({ email: email });
+    const emailTaken = await this.userModel.findOne({ email: email, deshabilitarDatos:false });
     if (emailTaken) {
       return null;
     }
@@ -170,6 +170,9 @@ export class CrudService {
 
   async getUser(userID: string): Promise<User> {
     const user = await this.userModel.findById(userID);
+    if(user.deshabilitarDatos) {
+      return null;
+    }
     if(!user) {
       return null;
     }
