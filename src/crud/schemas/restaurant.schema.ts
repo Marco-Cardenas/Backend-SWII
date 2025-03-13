@@ -14,5 +14,6 @@ export const RestaurantSchema = new Schema({
   viewed: { type: Number, default: 0 },
   reviews: { type: Array<reviewObject>, default: [] }, // Usa el subesquema
   fotos: { type: Array<String>, default: []},
-  tiempoBaneo: {type: Number, default:0 }
+  deshabilitarDatos: { type:Boolean, default:false },
+  tiempoBaneo: {type: Date, default:0 }
 });

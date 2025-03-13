@@ -21,5 +21,6 @@ export interface Restaurant extends Document {
   viewed: number;
   reviews: reviewObject[];
   fotos: string[];
-  tiempoBaneo: number;
+  deshabilitarDatos: boolean;
+  tiempoBaneo: Date;
 }

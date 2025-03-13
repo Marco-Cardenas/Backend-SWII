@@ -1,4 +1,4 @@
-import { Injectable,Res } from '@nestjs/common';
+import { Injectable,Res, UseInterceptors } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId, Types } from 'mongoose';
 import { User } from './interfaces/user.interface';
@@ -111,8 +111,9 @@ export class CrudService {
         delete restaurantData.fotos;
   
         // Insertamos el restaurante cercano
-        escaneosNear.push(restaurant);
   
+        escaneosNear.push(restaurantData);
+
         // Insertamos el id del restaurante cercano 
         idRestaurants.push(restaurant._id);
       }
@@ -151,7 +152,7 @@ export class CrudService {
   //Serivicios para usuarios
   async createUser(userDTO: CreateUserDTO): Promise<User> {
     const email = userDTO.email;
-    const emailTaken = await this.userModel.findOne({ email: email });
+    const emailTaken = await this.userModel.findOne({ email: email, deshabilitarDatos:false });
     if (emailTaken) {
       return null;
     }
@@ -189,6 +190,12 @@ export class CrudService {
 
   async getUser(userID: string): Promise<User> {
     const user = await this.userModel.findById(userID);
+    if(user.deshabilitarDatos) {
+      return null;
+    }
+    if(!user) {
+      return null;
+    }
     return user;
   }
 
@@ -206,18 +213,37 @@ export class CrudService {
     return usersMatch;
   }
 
-  async updateUserHistorial(userID: string, viewedRestaurant: string):Promise<User> {
+  async updateUserHistorial(userID: string, viewedRestaurant: string):Promise<any> {
     //el valor {new:true} se usa para retornar el usuario despues de actualizarlo
     const historialActualizado = await this.userModel.findByIdAndUpdate(userID, { $push:{ historial:viewedRestaurant } }, {new:true});
     return historialActualizado;
   }
 
   async updateUser(userID: string, userData: any): Promise<User> {
+
     if (userData.password !== undefined) {
       const salt = await bcrypt.genSalt()
       userData.password = await bcrypt.hash(userData.password, salt); 
     }
+    
     const userUpdated = await this.userModel.findByIdAndUpdate(userID, userData, { new: true });
+
+     //* modificar cada restaurant donde el usuario comento
+     const restaurants = await this.restaurantModel.find();
+
+     const bulkOps = restaurants.map(restaurant => ({
+      updateOne: {
+        filter: { _id: restaurant._id, 'reviews.idUser': userID },
+        update: { $set: { 'reviews.$.userName': userData.name } },
+      },
+    }));
+
+    try {
+      await this.restaurantModel.bulkWrite(bulkOps);
+     // console.log('Actualización completada');
+    } catch (err) {
+     // console.error('Error al actualizar los comentarios:', err);
+    }
     return userUpdated;
   }
 
@@ -225,6 +251,11 @@ export class CrudService {
   async deleteUser(userID: string): Promise<User> {
     //el valor {new:false} se usa para retornar el usuario antes de ser borrado
     //const userDeleted = await this.userModel.findByIdAndDelete(userID, {new:false});
+    const user = await this.userModel.findById(userID);
+    if(!user) {
+      return null;
+    }
+
     const userDeleted = await this.userModel.findByIdAndUpdate(userID, { deshabilitarDatos: true }, { new: true })
     return userDeleted;
   }
@@ -236,9 +267,12 @@ export class CrudService {
 
   async validSecurityQuestion(idUser: string, preguntasDeSeguridad: { pregunta: string, respuesta: string }[]): Promise<boolean> {
     const user = await this.getUser(idUser);
+    if(!user) {
+      return false;
+    }
     const isValid = user.preguntasDeSeguridad.every(preguntaUser => {
       return preguntasDeSeguridad.some(preguntaComprobar => {
-        preguntaUser.pregunta === preguntaComprobar.pregunta && preguntaUser.respuesta === preguntaComprobar.respuesta
+        return preguntaUser.pregunta === preguntaComprobar.pregunta && preguntaUser.respuesta === preguntaComprobar.respuesta
       })
     })
     return isValid;
@@ -281,12 +315,13 @@ export class CrudService {
       throw error;
     }
   }
+  
   async getRestaurantsLiked(userID: string): Promise<Restaurant[]> {
     const user = await this.userModel.findById(userID);
     if (!user || !user.favorites.length) {
       return [];
     }
-    const restaurantsLiked = await this.restaurantModel.find({ _id: { $in: user.favorites } });
+    const restaurantsLiked = await this.restaurantModel.find({ _id: { $in: user.favorites }, deshabilitarDatos: false });
     return restaurantsLiked;
   }
 
@@ -301,7 +336,7 @@ export class CrudService {
     if (!user || !user.historial.length) {
       return [];
     }
-    const restaurantsShowed = await this.restaurantModel.find({ _id: { $in: user.historial } });
+    const restaurantsShowed = await this.restaurantModel.find({ _id: { $in: user.historial }, deshabilitarDatos: false });
     return restaurantsShowed;
   }
 
@@ -334,12 +369,15 @@ export class CrudService {
 
   async getRestaurant(restaurantID: string): Promise<Restaurant> {
     const restaurant = await this.restaurantModel.findById(restaurantID);
+    if(!restaurant) {
+      return null;
+    }
     return restaurant;
   }
 
   async getRestaurantsByName(name: string) {
     // Retorna los restaurantes que concuerdan con el nombre solicitado
-    const restaurants = await this.getAllRestaurants({});
+    const restaurants = await this.getAllRestaurants({ deshabilitarDatos: false });
     const restaurantsMatch = restaurants.filter(restaurant => {
       return RegExp(name, 'i').test(restaurant.name)
     })
@@ -353,8 +391,8 @@ export class CrudService {
   }
 
   async deleteRestaurant(restaurantID: string): Promise<Restaurant> {
-    //el valor {new:false} se usa para retornar la tienda antes de ser borrada
-    const restaurantDeleted = await this.restaurantModel.findByIdAndDelete(restaurantID, {new:false});
+    //el valor {new:true} se usa para retornar la tienda despues de ser actualizada con su deshabilitarDatos en true
+    const restaurantDeleted = await this.restaurantModel.findByIdAndUpdate(restaurantID, { deshabilitarDatos: true }, {new:true});
     return restaurantDeleted;
   }
 
@@ -367,6 +405,12 @@ export class CrudService {
     return commentID;
   }
 
+  async getCommentByIdUser(restaurantID: string, userID: string) {
+    const dataRestaurant = await this.restaurantModel.findById(restaurantID);
+
+    const commentID = dataRestaurant.reviews.find(review => review.idUser === userID )
+    return commentID;
+  }
 
   async addComment(idRestaurant:string, comment:reviewObject, idUser:string):Promise<any>{
 
@@ -379,7 +423,7 @@ export class CrudService {
     //Verificar que el usuario no haya comentado aun
     const usuarioYaComento = restaurant.reviews.some(comentarios => comentarios.idUser == idUser);
     if(usuarioYaComento) {
-      return "Ya Comento";
+      return 'Ya Comento';
     }
     comment.idUser = idUser;
     comment.userName = user.name;
@@ -392,6 +436,9 @@ export class CrudService {
 
   async updateComment(idRestaurant: string, idComment: string, data: any):Promise<any> {
     const restaurant = await this.restaurantModel.findById(idRestaurant);
+    if(!restaurant) {
+      return null;
+    }
     const { comment, calification } = data;
 
     const commentToUpdate = restaurant.reviews.find((comentario) => comentario.idUser == idComment);
@@ -505,12 +552,16 @@ export class CrudService {
 
   async procesarDenuncia(denunciaID: string, denunciaData: any, adminID: string) {
     //el valor {new:true} se usa para retornar la denuncia despues de actualizarla
+    const fechaUTC:Date = new Date();
+    const fechaGMT4:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000);
     const denuncia = {
       ...denunciaData,
-      "idAdministrador":adminID
+      "idAdministrador":adminID,
+      "fecha":fechaGMT4
     }
 
     if(denuncia.tipo == 'OMITIDO') {
+      denuncia.tiempoBaneo = 0;
       const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, {new:true});
       if(!denunciaProcesada) {
         return null;
@@ -530,8 +581,9 @@ export class CrudService {
           return null;
         }
 
+        const tiempoBaneado: Date = new Date(fechaUTC.getTime() - (4*60*60*1000) + (denuncia.tiempoBaneo * 1000));
         //Ponemos el tiempo de Baneo actual al restaurante
-        await this.restaurantModel.findByIdAndUpdate(denunciado.idDenunciado, { tiempoBaneo: denunciaData.tiempoBaneo });
+        await this.restaurantModel.findByIdAndUpdate(denunciado.idDenunciado, { tiempoBaneo: tiempoBaneado });
 
         //Actualizamos la denuncia Procesada
         const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, { new: true });
@@ -544,9 +596,10 @@ export class CrudService {
         if(!usuario) {
           return null;
         }
-
+        
+        const tiempoBaneado: Date = new Date(fechaUTC.getTime() - (4*60*60*1000) + (denuncia.tiempoBaneo * 1000));
         //Ponemos el tiempo de Baneo al usuario
-        await this.userModel.findByIdAndUpdate(denunciado.idComentario, { tiempoBaneo: denunciaData.tiempoBaneo });
+        await this.userModel.findByIdAndUpdate(denunciado.idComentario, { tiempoBaneo: tiempoBaneado });
 
         //Actualizamos la denuncia Procesada
         const denunciaProcesada = await this.denunciaModel.findByIdAndUpdate(denunciaID, denuncia, { new: true });
@@ -556,6 +609,47 @@ export class CrudService {
 
     }
     return null;
+  }
+
+  async verifyBan(id: string, typo: string):Promise<boolean> {
+
+    if(typo == 'user') {
+      //Verificar Baneo de un usuario
+      const user = await this.userModel.findById(id);
+      if(!user) {
+        return null;
+      }
+      const fechaUTC:Date = new Date();
+      const fechaActual:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000); //Tomamos la fecha actual
+
+      const fechaMaximaDelBaneo: Date = new Date(user.tiempoBaneo); //La fecha maxima en que el baneo esta activo
+      
+      if(fechaMaximaDelBaneo > fechaActual) {
+        return true;
+      }
+      else {
+        await this.userModel.findByIdAndUpdate(id, {tiempoBaneo: 0}, {new: true}); // le eliminamos el tiempo de baneo al usuario
+        return false;
+      }
+    }
+    else if(typo == 'restaurant') {
+      const restaurant = await this.restaurantModel.findById(id);
+      if(!restaurant) {
+        return null;
+      }
+      const fechaUTC:Date = new Date();
+      const fechaActual:Date = new Date(fechaUTC.getTime() - 4 * 60 * 60 * 1000); //Tomamos la fecha actual
+
+      const fechaMaximaDelBaneo: Date = new Date(restaurant.tiempoBaneo); //La fecha maxima en que el baneo esta activo
+      
+      if(fechaMaximaDelBaneo > fechaActual) {
+        return true;
+      }
+      else {
+        await this.restaurantModel.findByIdAndUpdate(id, {tiempoBaneo: 0}, {new:true}); // le eliminamos el tiempo de baneo al restaurante
+        return false;
+      }
+    }
   }
 
   // ELIMINAR DATOS DE LA BD

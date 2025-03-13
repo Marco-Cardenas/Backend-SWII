@@ -33,5 +33,5 @@ export class CreateUserDTO {
   deshabilitarDatos: boolean;
 
   @ApiProperty({ description: 'Tiempo que estara baneado el usuario' })
-  tiempoBaneo: number;
+  tiempoBaneo: Date;
 }
