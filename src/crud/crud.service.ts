@@ -292,6 +292,7 @@ export class CrudService {
       throw error;
     }
   }
+  
   async getRestaurantsLiked(userID: string): Promise<Restaurant[]> {
     const user = await this.userModel.findById(userID);
     if (!user || !user.favorites.length) {
