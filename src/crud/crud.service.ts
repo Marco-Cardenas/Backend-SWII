@@ -94,8 +94,8 @@ export class CrudService {
     // Recopilamos todos los restaurantes dentro de un pequeño rango de latitud/longitud
     const allRestaurants = await this.restaurantModel.find({
       latitude: { $gt: latitudNum - 0.005, $lt: latitudNum + 0.005 },
-      longitude: { $gt: longitudNum - 0.005, $lt: longitudNum + 0.005 }
-    });
+      longitude: { $gt: longitudNum - 0.005, $lt: longitudNum + 0.005 },
+    }).select('-fotos');
 
     console.log("Todos los restaurantes son: "  + allRestaurants )
   
@@ -108,7 +108,7 @@ export class CrudService {
       // Comprobamos que la distancia del restaurante sea menor o igual a la requerida
       if (distance <= distanceKm) {
         const restaurantData = { ...restaurant.toObject(), distance };
-        delete restaurantData.fotos;
+//        delete restaurantData.fotos;
   
         // Insertamos el restaurante cercano
   
