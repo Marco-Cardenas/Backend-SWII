@@ -1,6 +1,6 @@
 import { Controller, Post, Res, Body, HttpStatus, Get, Param, Put, Delete, UseGuards, Request, Req } from '@nestjs/common';
 import { response, Response } from 'express';
-import { ApiTags, ApiResponse, ApiOperation, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiOperation, ApiBody, ApiParam, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { CrudService } from './crud.service';
 import { CreateUserDTO } from './dto/user.dto';
 import { CreateRestaurantDTO } from './dto/restaurant.dto';
@@ -859,6 +859,50 @@ async createAdmin(
       console.error(err);
     }
   }
+
+  @Post('getCommentByIdUser')
+  @ApiOperation({ summary: "Obtiene el ID del comentario empleando el ID del restaurante e ID del usuario" })
+  @ApiResponse({
+    status: 200,
+    description: "Comentario conseguido con exito",
+    schema: {
+      example: {
+        message: "Comentario conseguido con exito",
+        comment: { }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 404,
+    description: "No se ha encontrado el comentario",
+    schema: {
+      example: {
+        message: "No se ha encontrado el comentario"
+      }
+    }
+  })
+  async getCommentByIdUser(
+    @Res() respuesta,
+    @Body() body: { restaurantId: string, userId: string }
+  ) {
+      try {
+        const comment = await this.crudService.getCommentByIdUser(body.restaurantId, body.userId);
+
+        if(!comment) {
+          return respuesta.status(HttpStatus.NOT_FOUND).json({
+            message: "No se ha encontrado el comentario"
+          })
+        }
+
+        return respuesta.status(HttpStatus.OK).json({
+          message: "Comentario conseguido con exito",
+          comment
+        })
+      } catch(error) {
+        console.error(error);
+      }
+  }
+
 
   @UseGuards(JwtAuthGuard)
   @Post('addComment/:idRestaurant')

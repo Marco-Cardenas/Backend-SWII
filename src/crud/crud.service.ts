@@ -382,6 +382,12 @@ export class CrudService {
     return commentID;
   }
 
+  async getCommentByIdUser(restaurantID: string, userID: string) {
+    const dataRestaurant = await this.restaurantModel.findById(restaurantID);
+
+    const commentID = dataRestaurant.reviews.find(review => { review.idUser === userID })
+    return commentID;
+  }
 
   async addComment(idRestaurant:string, comment:reviewObject, idUser:string):Promise<any>{
 
