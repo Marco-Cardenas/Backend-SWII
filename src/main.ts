@@ -6,8 +6,8 @@ import * as JSONs from 'body-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {cors: true});
   app.enableCors();
-  //app.use(JSONs.json({ limit:'200mb' }));
-  //app.use(JSONs.urlencoded({ limit:'200mb', extended: true }));
+  app.use(JSONs.json({ limit:'200mb' }));
+  app.use(JSONs.urlencoded({ limit:'200mb', extended: true }));
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
     .setDescription('The API description')
